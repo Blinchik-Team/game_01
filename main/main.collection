@@ -1,4 +1,8 @@
 name: "main"
+instances {
+  id: "spawner"
+  prototype: "/game/enemy/spawner.go"
+}
 scale_along_z: 0
 embedded_instances {
   id: "handler"

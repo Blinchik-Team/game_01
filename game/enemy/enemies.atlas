@@ -1,0 +1,16 @@
+images {
+  image: "/assets/png/enemy_50.png"
+}
+images {
+  image: "/assets/png/enemy_75.png"
+}
+images {
+  image: "/assets/png/enemy_100.png"
+}
+images {
+  image: "/assets/png/enemy_200.png"
+}
+images {
+  image: "/assets/png/enemy_300.png"
+}
+extrude_borders: 2
