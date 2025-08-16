@@ -1,4 +1,7 @@
 local GAME_STATE = require("game.core.game_state")
+local GAME_OVER = "gane_over"
+
+local TIMER_WAVE_LEVEL = 30
 
 local function random_position()
 	return vmath.vector3(math.random(64, 1156 - 128), math.random(64, 640 - 128), 0)
@@ -16,16 +19,11 @@ function init(self)
 	math.randomseed(os.time())
 	self.player_id = factory.create("#playerfactory", vmath.vector3(600, 300, 0))
 	self.enemies = {}
-	-- for i = 1, 10 do
-	-- 	local enemy_id = spawn_enemies()
-	-- 	table.insert(self.enemies, enemy_id)
-	-- 	msg.post(enemy_id, "set_player", { player_id = self.player_id })
-	-- end
 	msg.post(".", "acquire_input_focus")
-
-	-- Инициализация таймера для спавна врагов
 	self.spawn_timer = 0
 	self.spawn_interval = 1 -- Интервал спавна в секундах
+	self.total_time = 0 -- Общее время, прошедшее с начала игры
+	self.spawn_enabled = true -- Флаг разрешения спавна
 end
 
 function final(self)
@@ -33,25 +31,42 @@ function final(self)
 end
 
 function update(self, dt)
-	-- Обновляем таймер
-	self.spawn_timer = self.spawn_timer + dt
+	self.total_time = self.total_time + dt
 
-	-- Проверяем, прошло ли 3 секунды
-	if self.spawn_timer >= self.spawn_interval then
-		-- Спавним нового врага
-		local enemy_id = spawn_enemies()
-		table.insert(self.enemies, enemy_id)
-		-- Отправляем новому врагу ID игрока
-		if go.exists(self.player_id) then
-			msg.post(enemy_id, "set_player", { player_id = self.player_id })
-		end
-		-- Сбрасываем таймер
-		self.spawn_timer = self.spawn_timer - self.spawn_interval
+	-- Отключаем спавн врагов через TIMER_WAVE_LEVEL секунд
+	if self.total_time >= TIMER_WAVE_LEVEL then
+		self.spawn_enabled = false
+		msg.post("")
 	end
+
+	if self.spawn_enabled then
+		self.spawn_timer = self.spawn_timer + dt
+		if self.spawn_timer >= self.spawn_interval then
+			local enemy_id = spawn_enemies()
+			table.insert(self.enemies, enemy_id)
+			if go.exists(self.player_id) then
+				msg.post(enemy_id, "set_player", { player_id = self.player_id })
+			end
+			self.spawn_timer = self.spawn_timer - self.spawn_interval
+		end
+	end
+	-- Отправка оставшегося времени таймера в GUI (TIMER_WAVE_LEVEL секунд минус текущее время)
+	local time_left = math.max(0, TIMER_WAVE_LEVEL - math.floor(self.total_time))
+	msg.post("/view#arena", "update_timer", { time = time_left })
 end
 
 function on_input(self, action_id, action)
 	if action_id == hash("escape") and action.released then
 		msg.post("/view#pause_menu", "pause")
 	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("game_over") then
+		GAME_STATE.set_state("game_over")
+		if GAME_STATE.get_state() == "game_over" then
+			msg.post("/view#death", "game_over")
+			msg.post(".", "acquire_input_focus") -- чтобы не багалось
+		end
+	end 
 end

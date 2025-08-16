@@ -1,0 +1,36 @@
+script: "/game/gui/shop.gui_script"
+fonts {
+  name: "default"
+  font: "/builtins/fonts/default.font"
+}
+textures {
+  name: "main"
+  texture: "/main/main.atlas"
+}
+nodes {
+  position {
+    x: 644.0
+    y: 660.0
+  }
+  type: TYPE_TEMPLATE
+  id: "shop"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "shop/box"
+  parent: "shop"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "play\n"
+  ""
+  id: "shop/text"
+  parent: "shop/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

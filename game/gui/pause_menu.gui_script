@@ -1,9 +1,8 @@
 local GAME_STATE = require "game.core.game_state"
-
 local PAUSE = hash("pause")
 
 function init(self)
-	msg.post(".", "acquire_input_focus")
+	msg.post(".", "release_input_focus")
 	
 	self.pause_menu = gui.get_node("button/box")
 	self.back_main_menu = gui.get_node("back_main_menu/box")
@@ -33,17 +32,17 @@ function on_message(self, message_id, message, sender)
 			gui.set_enabled(self.pause_menu, true) -- показываем надпись "Pause"
 			gui.set_enabled(self.back_main_menu, true) -- показываем кнопку "Menu"
 			GAME_STATE.toggle_pause()
-			msg.post(".", "acquire_input_focus") -- чтобы не багалось
+			msg.post(".", "acquire_input_focus")
 		elseif GAME_STATE.get_state() == "game_pause" then
 			gui.set_enabled(self.pause_menu, false) -- скрываем надпись "Pause"
-			gui.set_enabled(self.back_main_menu, false) -- показываем кнопку "Menu"
+			gui.set_enabled(self.back_main_menu, false) -- скрываем кнопку "Menu"
 			GAME_STATE.toggle_pause()
 		end
 	end 
 end
 
 function on_input(self, action_id, action)
-	if action_id == hash("touch") and action.released then
+	if action_id == hash("touch") and action.released and GAME_STATE.get_state() == "game_pause" then
 		if gui.pick_node(self.back_main_menu, action.x, action.y) then
 			msg.post("main:/handler", "show_menu")
 		end

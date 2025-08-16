@@ -14,8 +14,8 @@ function init(self)
 	self.fire_cooldown = 0
 	self.fire_interval = 0.5
 	self.fire_range = 600
-	print("Player initialized: fire_range=" .. self.fire_range .. ", fire_interval=" .. self.fire_interval)
-	print("Player position: " .. tostring(go.get_position()))
+	-- print("Player initialized: fire_range=" .. self.fire_range .. ", fire_interval=" .. self.fire_interval)
+	-- print("Player position: " .. tostring(go.get_position()))
 end
 
 -- Очистка
@@ -28,10 +28,10 @@ local function distance_to(my_pos, other_id)
 	if go.exists(other_id) then
 		local other_pos = go.get_position(other_id)
 		local dist = vmath.length(my_pos - other_pos)
-		print("Distance to " .. tostring(other_id) .. ": " .. dist)
+		-- print("Distance to " .. tostring(other_id) .. ": " .. dist)
 		return dist
 	end
-	print("Enemy " .. tostring(other_id) .. " does not exist")
+	-- print("Enemy " .. tostring(other_id) .. " does not exist")
 	return math.huge
 end
 
@@ -41,7 +41,7 @@ local function find_closest_enemy(self)
 	local min_distance = self.fire_range
 	local my_pos = go.get_position()
 
-	print("Enemies in range: " .. (next(self.enemies_in_range) and "Yes" or "No"))
+	-- print("Enemies in range: " .. (next(self.enemies_in_range) and "Yes" or "No"))
 
 	for enemy_id, _ in pairs(self.enemies_in_range) do
 		if go.exists(enemy_id) then
@@ -77,34 +77,34 @@ function update(self, dt)
 	self.input.y = 0
 	self.moving = false
 	
-	-- Автоматическая стрельба
-	if self.fire_cooldown <= 0 then
-		local my_pos = go.get_position()
-		local fire_dir = nil
-		local rot = nil
-
-		local closest_enemy = find_closest_enemy(self)
-		if closest_enemy and go.exists(closest_enemy) then
-			local enemy_pos = go.get_position(closest_enemy)
-			fire_dir = vmath.normalize(enemy_pos - my_pos)
-			if vmath.length(fire_dir) < 0.1 then
-				print("Warning: fire_dir near zero, skipping shot")
-				return
-			end
-			print("Targeting enemy: ID=" .. tostring(closest_enemy) .. ", Pos=" .. tostring(enemy_pos) .. ", Dir=" .. tostring(fire_dir))
-		else
-			-- Не стреляем, если нет врагов
-			return
-		end
-
-		local angle = math.atan2(fire_dir.y, fire_dir.x)
-		rot = vmath.quat_rotation_z(angle)
-		local offset = fire_dir * 50
-		local bullet_pos = my_pos + offset
-		local bullet_id = factory.create("/arena#bulletsfactory", bullet_pos, rot, { dir = fire_dir })
-		self.fire_cooldown = self.fire_interval
-		print("Bullet spawned: ID=" .. tostring(bullet_id) .. ", Pos=" .. tostring(bullet_pos) .. ", Dir=" .. tostring(fire_dir))
-	end
+-- 	-- Автоматическая стрельба
+-- 	if self.fire_cooldown <= 0 then
+-- 		local my_pos = go.get_position()
+-- 		local fire_dir = nil
+-- 		local rot = nil
+-- 
+-- 		local closest_enemy = find_closest_enemy(self)
+-- 		if closest_enemy and go.exists(closest_enemy) then
+-- 			local enemy_pos = go.get_position(closest_enemy)
+-- 			fire_dir = vmath.normalize(enemy_pos - my_pos)
+-- 			if vmath.length(fire_dir) < 0.1 then
+-- 				print("Warning: fire_dir near zero, skipping shot")
+-- 				return
+-- 			end
+-- 			-- print("Targeting enemy: ID=" .. tostring(closest_enemy) .. ", Pos=" .. tostring(enemy_pos) .. ", Dir=" .. tostring(fire_dir))
+-- 		else
+-- 			-- Не стреляем, если нет врагов
+-- 			return
+-- 		end
+-- 
+-- 		local angle = math.atan2(fire_dir.y, fire_dir.x)
+-- 		rot = vmath.quat_rotation_z(angle)
+-- 		local offset = fire_dir * 50
+-- 		local bullet_pos = my_pos + offset
+-- 		local bullet_id = factory.create("/arena#bulletsfactory", bullet_pos, rot, { dir = fire_dir })
+-- 		self.fire_cooldown = self.fire_interval
+-- 		-- print("Bullet spawned: ID=" .. tostring(bullet_id) .. ", Pos=" .. tostring(bullet_pos) .. ", Dir=" .. tostring(fire_dir))
+-- 	end
 end
 
 -- Обработка ввода
@@ -128,15 +128,17 @@ end
 -- Обработка сообщений
 function on_message(self, message_id, message, sender)
 	if message_id == COLLISION_RESPONSE and message.own_group == hash("player") and message.group == ENEMIES then
-		go.delete()
-		print("Player collided with enemy: ID=" .. tostring(sender))
+		print("убили")
+		msg.post("game:/arena#game", "game_over")
+		--go.delete()
+		-- print("Player collided with enemy: ID=" .. tostring(sender))
 	elseif message_id == TRIGGER_RESPONSE and message.group == ENEMIES then
 		if message.enter then
 			self.enemies_in_range[message.other_id] = true
-			print("Enemy entered range: ID=" .. tostring(message.other_id) .. ", Pos=" .. tostring(go.get_position(message.other_id)))
+			-- print("Enemy entered range: ID=" .. tostring(message.other_id) .. ", Pos=" .. tostring(go.get_position(message.other_id)))
 		else
 			self.enemies_in_range[message.other_id] = nil
-			print("Enemy left range: ID=" .. tostring(message.other_id))
+			-- print("Enemy left range: ID=" .. tostring(message.other_id))
 		end
 	end
 	if message_id == hash("contact_point_response") then

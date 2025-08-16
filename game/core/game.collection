@@ -32,6 +32,18 @@ embedded_instances {
   "  id: \"pause_menu\"\n"
   "  component: \"/game/gui/pause_menu.gui\"\n"
   "}\n"
+  "components {\n"
+  "  id: \"arena\"\n"
+  "  component: \"/game/gui/arena.gui\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"death\"\n"
+  "  component: \"/game/gui/death.gui\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"shop\"\n"
+  "  component: \"/game/gui/shop.gui\"\n"
+  "}\n"
   ""
 }
 embedded_instances {
