@@ -3,6 +3,7 @@ local CONTACT_POINT_RESPONSE = hash("contact_point_response")
 local PLAYER = hash("player")
 local PLAYER_BULLET = hash("player_bullet")
 local WALL = hash("wall")
+local DAMAGE_RADIUS = 100  -- радиус, в котором игрок получает урон
 
 go.property("speed", 200)
 go.property("attack_range", 50) -- радиус остановки и начала удара
@@ -189,16 +190,28 @@ end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("apply_damage") and not self.is_dead then
-		self.is_dead = true
-		self.stop_movement = true
-		self.current_animation = "dead"
-		spine.play_anim("#spinemodel", "dead", go.PLAYBACK_ONCE_FORWARD, {}, function(self_cb, message_id_cb, message_cb, sender_cb)
-			if message_id_cb == hash("spine_animation_done") and message_cb.animation_id == hash("dead") then
-				print("умер")
-				msg.post("#co", "disable") -- отключение коллизий
-				go.delete()
-			end
-		end)
+		local my_pos = go.get_position()
+		local attacker_pos = go.get_position(sender)
+
+		local dist = vmath.length(my_pos - attacker_pos)
+		if dist <= DAMAGE_RADIUS then
+			self.is_dead = true
+			self.stop_movement = true
+			self.current_animation = "dead"
+			local delay_time = 0.0  -- задержка в секундах
+			timer.delay(delay_time, false, function()
+				spine.play_anim("#spinemodel", "dead", go.PLAYBACK_ONCE_FORWARD, {}, function(self_cb, message_id_cb, message_cb, sender_cb)
+					if message_id_cb == hash("spine_animation_done") and message_cb.animation_id == hash("dead") then
+						print("умер")
+						msg.post("#co", "disable") -- отключение коллизий
+						go.delete()
+					end
+				end)
+			end)
+		else
+			-- Игрок слишком далеко — урон не применяется
+			print("Урон не нанесён, слишком далеко от атакующего")
+		end
 	end
 	if message_id == hash("trigger_response") then
 		if message.enter then

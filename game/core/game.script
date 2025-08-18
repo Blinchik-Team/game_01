@@ -22,7 +22,7 @@ function init(self)
 	-- 	msg.post(enemy_id, "set_player", { player_id = self.player_id })
 	-- end
 	msg.post(".", "acquire_input_focus")
-
+	--spawn_enemies()
 	-- Инициализация таймера для спавна врагов
 	self.spawn_timer = 0
 	self.spawn_interval = 1 -- Интервал спавна в секундах
