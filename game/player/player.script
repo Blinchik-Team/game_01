@@ -4,7 +4,6 @@ local ENEMIES = hash("enemies")
 
 local DAMAGE = 10               -- урон (можно подправить)
 local ATTACK_INTERVAL = 0.5    -- время между атаками
-local ATTACK_RANGE = 50
 
 local function update_animation(self)
 	-- Определяем направление взгляда по горизонтали и сохраняем в self.facing_left
@@ -132,110 +131,49 @@ end
 function update(self, dt)
 	self.fire_cooldown = math.max(0, self.fire_cooldown - dt)
 
-	local pos = go.get_position()
-
-	if #self.enemies_list == 0 then
-		self.moving = false
-		update_animation(self)
-		return
-	end
-
-	local target_enemy = self.enemies_list[self.current_enemy_index]
-	if not target_enemy or not go.exists(target_enemy) then
-		remove_enemy(self, target_enemy)
-		self.current_enemy_index = self.current_enemy_index + 1
-		if self.current_enemy_index > #self.enemies_list then
-			self.current_enemy_index = 1
-		end
-		return
-	end
-
-	local target_pos = go.get_position(target_enemy)
-	local dist_to_enemy = vmath.length(target_pos - pos)
-
-	if dist_to_enemy > ATTACK_RANGE then
-		-- Движемся к врагу
-		local dir = vmath.normalize(target_pos - pos)
-		self.dir = dir
-		self.moving = true
-		local new_pos = pos + dir * self.speed * dt
-		go.set_position(new_pos)
+	if self.moving then
+		local pos = go.get_position()
+		pos = pos + self.dir * self.speed * dt
+		go.set_position(pos)
 		update_animation(self)
 	else
-		-- В радиусе атаки и можно бить по таймеру
-		self.moving = false
-		if self.fire_cooldown <= 0 then
-			-- Проигрываем анимацию атаки один раз поочерёдно
+		if self.current_animation ~= "idle" then
+			spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
+			self.current_animation = "idle"
+		end
+	end
+
+	self.input.x = 0
+	self.input.y = 0
+	self.moving = false
+
+	-- Атака врагов по очереди из enemies_list
+	if self.fire_cooldown <= 0 and #self.enemies_list > 0 then
+		local target_enemy = self.enemies_list[self.current_enemy_index]
+
+		if target_enemy and go.exists(target_enemy) then
 			if self.last_attack_index == 0 then
-				spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_ONCE_FORWARD)
+				spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_LOOP_FORWARD)
+				go.set(self.url_spinemodel, "playback_rate", 2)
 				self.last_attack_index = 1
-			else
-				spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_ONCE_FORWARD)
+			elseif self.last_attack_index == 1 then
+				spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_LOOP_FORWARD)
+				go.set(self.url_spinemodel, "playback_rate", 2)
 				self.last_attack_index = 0
 			end
-			self.current_animation = "attack"
-			self.fire_cooldown = self.fire_interval
-
-			-- Отправляем сообщение о нанесении урона
-			msg.post(target_enemy, "apply_damage", { amount = DAMAGE })
-
-			print("Attacked enemy:", target_enemy)
-
-			-- Переходим к следующему врагу
+			
+			attack_enemy(self, target_enemy)
 			self.current_enemy_index = self.current_enemy_index + 1
 			if self.current_enemy_index > #self.enemies_list then
 				self.current_enemy_index = 1
 			end
+			self.fire_cooldown = self.fire_interval
+		else
+			-- Если враг удалён, убираем его из списка
+			remove_enemy(self, target_enemy)
 		end
-		update_animation(self)
 	end
 end
--- function update(self, dt)
--- 	self.fire_cooldown = math.max(0, self.fire_cooldown - dt)
--- 
--- 	if self.moving then
--- 		local pos = go.get_position()
--- 		pos = pos + self.dir * self.speed * dt
--- 		go.set_position(pos)
--- 		update_animation(self)
--- 	else
--- 		if self.current_animation ~= "idle" then
--- 			spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
--- 			self.current_animation = "idle"
--- 		end
--- 	end
--- 
--- 	self.input.x = 0
--- 	self.input.y = 0
--- 	self.moving = false
--- 
--- 	-- Атака врагов по очереди из enemies_list
--- 	if self.fire_cooldown <= 0 and #self.enemies_list > 0 then
--- 		local target_enemy = self.enemies_list[self.current_enemy_index]
--- 
--- 		if target_enemy and go.exists(target_enemy) then
--- 			if self.last_attack_index == 0 then
--- 				spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_LOOP_FORWARD)
--- 				go.set(self.url_spinemodel, "playback_rate", 2)
--- 				self.last_attack_index = 1
--- 			elseif self.last_attack_index == 1 then
--- 				spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_LOOP_FORWARD)
--- 				go.set(self.url_spinemodel, "playback_rate", 2)
--- 				self.last_attack_index = 0
--- 			end
--- 			
--- 			attack_enemy(self, target_enemy)
--- 			self.current_enemy_index = self.current_enemy_index + 1
--- 			if self.current_enemy_index > #self.enemies_list then
--- 				self.current_enemy_index = 1
--- 			end
--- 			self.fire_cooldown = self.fire_interval
--- 		else
--- 			-- Если враг удалён, убираем его из списка
--- 			remove_enemy(self, target_enemy)
--- 		end
--- 	end
--- end
 
 function on_input(self, action_id, action)
 	if action_id == hash("up") then
