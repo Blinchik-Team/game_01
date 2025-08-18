@@ -1,0 +1,91 @@
+images {
+  image: "/assets/animation/images/arm_1.png"
+}
+images {
+  image: "/assets/animation/images/beard.png"
+}
+images {
+  image: "/assets/animation/images/bl_1.png"
+}
+images {
+  image: "/assets/animation/images/bl_2.png"
+}
+images {
+  image: "/assets/animation/images/body.png"
+}
+images {
+  image: "/assets/animation/images/browe_1.png"
+}
+images {
+  image: "/assets/animation/images/browe_2.png"
+}
+images {
+  image: "/assets/animation/images/clo_down.png"
+}
+images {
+  image: "/assets/animation/images/clo_middle.png"
+}
+images {
+  image: "/assets/animation/images/clo_up_1.png"
+}
+images {
+  image: "/assets/animation/images/clo_up_2.png"
+}
+images {
+  image: "/assets/animation/images/cloack.png"
+}
+images {
+  image: "/assets/animation/images/face.png"
+}
+images {
+  image: "/assets/animation/images/foot_1.png"
+}
+images {
+  image: "/assets/animation/images/foot_2.png"
+}
+images {
+  image: "/assets/animation/images/hair_2.png"
+}
+images {
+  image: "/assets/animation/images/hair_front.png"
+}
+images {
+  image: "/assets/animation/images/hand_1.png"
+}
+images {
+  image: "/assets/animation/images/hand_2.png"
+}
+images {
+  image: "/assets/animation/images/horn_1.png"
+}
+images {
+  image: "/assets/animation/images/leg_1.png"
+}
+images {
+  image: "/assets/animation/images/leg_2.png"
+}
+images {
+  image: "/assets/animation/images/mus.png"
+}
+images {
+  image: "/assets/animation/images/nose.png"
+}
+images {
+  image: "/assets/animation/images/shelmed.png"
+}
+images {
+  image: "/assets/animation/images/veco_1.png"
+}
+images {
+  image: "/assets/animation/images/veco_2.png"
+}
+images {
+  image: "/assets/animation/images/zr_1.png"
+}
+images {
+  image: "/assets/animation/images/zr_2.png"
+}
+images {
+  image: "/assets/animation/images/\320\241\320\273\320\276\320\271 12.png"
+}
+extrude_borders: 2

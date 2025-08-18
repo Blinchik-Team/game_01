@@ -3,17 +3,6 @@ components {
   component: "/game/player/player.script"
 }
 embedded_components {
-  id: "sprite"
-  type: "sprite"
-  data: "default_animation: \"green_black\"\n"
-  "material: \"/builtins/materials/sprite.material\"\n"
-  "textures {\n"
-  "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/main/main.atlas\"\n"
-  "}\n"
-  ""
-}
-embedded_components {
   id: "co"
   type: "collisionobject"
   data: "type: COLLISION_OBJECT_TYPE_KINEMATIC\n"
@@ -27,14 +16,16 @@ embedded_components {
   "  shapes {\n"
   "    shape_type: TYPE_BOX\n"
   "    position {\n"
+  "      x: -4.0\n"
+  "      y: 58.0\n"
   "    }\n"
   "    rotation {\n"
   "    }\n"
   "    index: 0\n"
   "    count: 3\n"
   "  }\n"
-  "  data: 12.05059\n"
-  "  data: 12.074853\n"
+  "  data: 31.257132\n"
+  "  data: 54.027588\n"
   "  data: 10.0\n"
   "}\n"
   ""
@@ -52,13 +43,31 @@ embedded_components {
   "  shapes {\n"
   "    shape_type: TYPE_SPHERE\n"
   "    position {\n"
+  "      x: -3.0\n"
+  "      y: 61.0\n"
   "    }\n"
   "    rotation {\n"
   "    }\n"
   "    index: 0\n"
   "    count: 1\n"
   "  }\n"
-  "  data: 206.0862\n"
+  "  data: 100.58888\n"
   "}\n"
   ""
+}
+embedded_components {
+  id: "spinemodel"
+  type: "spinemodel"
+  data: "spine_scene: \"/game/player/player.spinescene\"\n"
+  "default_animation: \"run\"\n"
+  "skin: \"\"\n"
+  "material: \"/defold-spine/assets/spine.material\"\n"
+  ""
+  position {
+    x: -7.0
+    y: 11.0
+  }
+  scale {
+    z: -1.0
+  }
 }
