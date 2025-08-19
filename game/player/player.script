@@ -5,6 +5,14 @@
 	local ATTACK_INTERVAL = 0.5                             -- Время между атаками в секундах
 	local ATTACK_RANGE = 50                                 -- Радиус, в котором происходит атака
 
+
+	local function anim_done(self, message_id, message, sender)
+		if message_id == hash("spine_animation_done") then
+			self.is_attacking = false
+			-- Дополнительно можно сделать очистку цели атаки
+			self.target_enemy_id = nil
+		end
+	end
 	
 	-- Функция, обновляющая анимацию персонажа в зависимости от направления движения
 	local function update_animation(self)
@@ -125,23 +133,39 @@
 		self.input.y = 0
 		self.moving = false
 
-		-- Проверка возможности атаки и наличие врагов
 		if self.fire_cooldown <= 0 and #self.enemies_list > 0 then
-			local target_enemy = self.enemies_list[self.current_enemy_index]
-			if target_enemy and go.exists(target_enemy) then
-				-- Проигрываем анимацию атаки попеременно "front" и "back"
-				if self.last_attack_index == 0 then
-					spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_LOOP_FORWARD)
-					go.set(self.url_spinemodel, "playback_rate", 2)
-					self.last_attack_index = 1
-				else
-					spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_LOOP_FORWARD)
-					go.set(self.url_spinemodel, "playback_rate", 2)
-					self.last_attack_index = 0
-				end
+			local player_pos = go.get_position()
 
-				-- Атакуем врага, отправляя сообщение о нанесении урона
-				attack_enemy(self, target_enemy)
+			local attacked = false
+			local attempts = 0
+			local max_attempts = #self.enemies_list
+
+			while not attacked and attempts < max_attempts do
+				local enemy_id = self.enemies_list[self.current_enemy_index]
+				if go.exists(enemy_id) then
+					local enemy_pos = go.get_position(enemy_id)
+					local dir_to_enemy = enemy_pos - player_pos
+					
+					if (self.facing_left and dir_to_enemy.x < 0) or (not self.facing_left and dir_to_enemy.x > 0) then
+						-- Проигрываем анимацию атаки
+						if self.last_attack_index == 0 then
+							spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, anim_done)
+							go.set(self.url_spinemodel, "playback_rate", 2)
+							self.last_attack_index = 1
+						else
+							print("fsssssssssss")
+							spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, anim_done)
+							go.set(self.url_spinemodel, "playback_rate", 2)
+							self.last_attack_index = 0
+						end
+						-- Наносим урон выбранному врагу
+						msg.post(enemy_id, "apply_damage", { amount = DAMAGE })
+						print("Attacked enemy:", enemy_id)
+						attacked = true
+					end
+				else
+					remove_enemy(self, self.enemies_list[self.current_enemy_index])
+				end
 
 				-- Переходим к следующему врагу в списке
 				self.current_enemy_index = self.current_enemy_index + 1
@@ -149,13 +173,14 @@
 					self.current_enemy_index = 1
 				end
 
-				-- Ставим таймер перезарядки для следующей атаки
+				attempts = attempts + 1
+			end
+
+			if attacked then
 				self.fire_cooldown = self.fire_interval
-			else
-				-- Если целевой враг удалён — убираем его из списка
-				remove_enemy(self, target_enemy)
 			end
 		end
+		
 	end
 
 	-- Обработка ввода пользователем (клавиатура, геймпад)
@@ -190,6 +215,7 @@
 			else
 				remove_enemy(self, message.other_id)
 				print("Enemy left range: ID=" .. tostring(message.other_id))
+				
 			end
 		end
 

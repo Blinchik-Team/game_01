@@ -149,7 +149,7 @@ function update_animation_state(self, dt, dist)
 		go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
 	end
 
-	print("Distance to target:", dist, "Attack range:", self.attack_range)
+	--print("Distance to target:", dist, "Attack range:", self.attack_range)
 
 	if dist > self.attack_range then
 		move_towards_target(self, direction, dt)
@@ -202,7 +202,7 @@ function on_message(self, message_id, message, sender)
 			timer.delay(delay_time, false, function()
 				spine.play_anim("#spinemodel", "dead", go.PLAYBACK_ONCE_FORWARD, {}, function(self_cb, message_id_cb, message_cb, sender_cb)
 					if message_id_cb == hash("spine_animation_done") and message_cb.animation_id == hash("dead") then
-						print("умер")
+						--print("умер")
 						msg.post("#co", "disable") -- отключение коллизий
 						go.delete()
 					end
@@ -227,8 +227,15 @@ function on_message(self, message_id, message, sender)
 		if message.group == PLAYER then
 			local my_pos = go.get_world_position()
 			local other_pos = go.get_world_position(message.other_id)
+
+			-- Проверяем, есть ли self.target_position и если нет - инициализируем её
+			if not self.target_position then
+				self.target_position = my_pos
+			end
+
 			local distance_to_target = vmath.length(my_pos - self.target_position)
 			local distance_to_collision = vmath.length(my_pos - other_pos)
+
 			if distance_to_collision < distance_to_target or not self.target_id then
 				self.target_position = other_pos
 				self.target_id = message.other_id
