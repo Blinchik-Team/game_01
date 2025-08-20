@@ -1,145 +1,226 @@
-local COLLISION_RESPONSE = hash("collision_response")
-local TRIGGER_RESPONSE = hash("trigger_response")
-local ENEMIES = hash("enemies")
+	local COLLISION_RESPONSE = hash("collision_response")   -- Константа для идентификации сообщений о столкновениях
+	local TRIGGER_RESPONSE = hash("trigger_response")       -- Константа для идентификации сообщений о триггерах
+	local ENEMIES = hash("enemies")                         -- Константа для хэша группы врагов
+	local DAMAGE = 10                                       -- Количество урона, наносимого врагам
+	local ATTACK_INTERVAL = 0.5                             -- Время между атаками в секундах
+	local ATTACK_RANGE = 50                                 -- Радиус, в котором происходит атака
 
--- Инициализация игрока
-function init(self)
-	msg.post(".", "acquire_input_focus")
-	self.moving = false
-	self.input = vmath.vector3()
-	self.dir = vmath.vector3(0, 1, 0)
-	self.speed = 300
-	self.current_animation = "idle"
-	self.enemies_in_range = {}
-	self.fire_cooldown = 0
-	self.fire_interval = 0.5
-	self.fire_range = 600
-	print("Player initialized: fire_range=" .. self.fire_range .. ", fire_interval=" .. self.fire_interval)
-	print("Player position: " .. tostring(go.get_position()))
-end
 
--- Очистка
-function final(self)
-	msg.post(".", "release_input_focus")
-end
-
--- Вычисление расстояния
-local function distance_to(my_pos, other_id)
-	if go.exists(other_id) then
-		local other_pos = go.get_position(other_id)
-		local dist = vmath.length(my_pos - other_pos)
-		print("Distance to " .. tostring(other_id) .. ": " .. dist)
-		return dist
-	end
-	print("Enemy " .. tostring(other_id) .. " does not exist")
-	return math.huge
-end
-
--- Поиск ближайшего врага
-local function find_closest_enemy(self)
-	local closest_id = nil
-	local min_distance = self.fire_range
-	local my_pos = go.get_position()
-
-	print("Enemies in range: " .. (next(self.enemies_in_range) and "Yes" or "No"))
-
-	for enemy_id, _ in pairs(self.enemies_in_range) do
-		if go.exists(enemy_id) then
-			local dist = distance_to(my_pos, enemy_id)
-			if dist <= min_distance then
-				min_distance = dist
-				closest_id = enemy_id
-			end
-		else
-			self.enemies_in_range[enemy_id] = nil
+	local function anim_done(self, message_id, message, sender)
+		if message_id == hash("spine_animation_done") then
+			self.is_attacking = false
+			-- Дополнительно можно сделать очистку цели атаки
+			self.target_enemy_id = nil
 		end
 	end
-
-	if closest_id then
-		print("Closest enemy: ID=" .. tostring(closest_id) .. ", Distance=" .. min_distance)
-	else
-		print("No enemies within fire range")
-	end
-	return closest_id
-end
-
--- Обновление
-function update(self, dt)
-	self.fire_cooldown = math.max(0, self.fire_cooldown - dt)
-
-	if self.moving then
-		local pos = go.get_position()
-		pos = pos + self.dir * self.speed * dt
-		go.set_position(pos)
-	end
-
-	self.input.x = 0
-	self.input.y = 0
-	self.moving = false
 	
-	-- Автоматическая стрельба
-	if self.fire_cooldown <= 0 then
-		local my_pos = go.get_position()
-		local fire_dir = nil
-		local rot = nil
+	-- Функция, обновляющая анимацию персонажа в зависимости от направления движения
+	local function update_animation(self)
+		-- Выбирает направление взгляда по оси X (лево или право)
+		if self.dir.x > 0 then
+			self.facing_left = false
+		elseif self.dir.x < 0 then
+			self.facing_left = true
+		end
 
-		local closest_enemy = find_closest_enemy(self)
-		if closest_enemy and go.exists(closest_enemy) then
-			local enemy_pos = go.get_position(closest_enemy)
-			fire_dir = vmath.normalize(enemy_pos - my_pos)
-			if vmath.length(fire_dir) < 0.1 then
-				print("Warning: fire_dir near zero, skipping shot")
-				return
+		-- Если движение есть по оси X, проигрывает анимацию бега и устанавливает отражение спрайта
+		if self.dir.x ~= 0 then
+			if self.facing_left and self.current_animation ~= "left" then
+				spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)  -- Запускает анимацию бега
+				go.set(go.get_id(), "scale", vmath.vector3(-1, 1, 1))            -- Отражает спрайт по X влево
+				self.current_animation = "left"                                   -- Запоминает текущую анимацию
+			elseif not self.facing_left and self.current_animation ~= "right" then
+				spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)  -- Бег вправо
+				go.set(go.get_id(), "scale", vmath.vector3(1, 1, 1))             -- Обычное отображение спрайта
+				self.current_animation = "right"
 			end
-			print("Targeting enemy: ID=" .. tostring(closest_enemy) .. ", Pos=" .. tostring(enemy_pos) .. ", Dir=" .. tostring(fire_dir))
 		else
-			-- Не стреляем, если нет врагов
-			return
+			-- Если движение по X отсутствует, проверяет ось Y и проигрывает соответствующую анимацию
+			if self.dir.y > 0 and self.current_animation ~= "up" then
+				spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)  -- Бег вверх
+				local scale_x = self.facing_left and -1 or 1                     -- Отражение в зависимости от направления лица
+				go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
+				self.current_animation = "up"
+			elseif self.dir.y < 0 and self.current_animation ~= "down" then
+				spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)  -- Бег вниз
+				local scale_x = self.facing_left and -1 or 1
+				go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
+				self.current_animation = "down"
+			end
 		end
 
-		local angle = math.atan2(fire_dir.y, fire_dir.x)
-		rot = vmath.quat_rotation_z(angle)
-		local offset = fire_dir * 50
-		local bullet_pos = my_pos + offset
-		local bullet_id = factory.create("/arena#bulletsfactory", bullet_pos, rot, { dir = fire_dir })
-		self.fire_cooldown = self.fire_interval
-		print("Bullet spawned: ID=" .. tostring(bullet_id) .. ", Pos=" .. tostring(bullet_pos) .. ", Dir=" .. tostring(fire_dir))
-	end
-end
-
--- Обработка ввода
-function on_input(self, action_id, action)
-	if action_id == hash("up") then
-		self.input.y = 1
-	elseif action_id == hash("down") then
-		self.input.y = -1
-	elseif action_id == hash("left") then
-		self.input.x = -1
-	elseif action_id == hash("right") then
-		self.input.x = 1
-	end
-
-	if vmath.length(self.input) > 0 then
-		self.moving = true
-		self.dir = vmath.normalize(self.input)
-	end
-end
-
--- Обработка сообщений
-function on_message(self, message_id, message, sender)
-	if message_id == COLLISION_RESPONSE and message.own_group == hash("player") and message.group == ENEMIES then
-		go.delete()
-		print("Player collided with enemy: ID=" .. tostring(sender))
-	elseif message_id == TRIGGER_RESPONSE and message.group == ENEMIES then
-		if message.enter then
-			self.enemies_in_range[message.other_id] = true
-			print("Enemy entered range: ID=" .. tostring(message.other_id) .. ", Pos=" .. tostring(go.get_position(message.other_id)))
-		else
-			self.enemies_in_range[message.other_id] = nil
-			print("Enemy left range: ID=" .. tostring(message.other_id))
+		-- Если персонаж стоит на месте, проигрывает анимацию idle (покой)
+		if not self.moving and self.current_animation ~= "idle" then
+			spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD) -- Анимация покоя
+			self.current_animation = "idle"
 		end
 	end
-	if message_id == hash("contact_point_response") then
-		go.set_position(go.get_position() + message.normal * message.distance)
-	end	
-end
+
+	-- Функция инициализации
+	function init(self)
+		msg.post(".", "acquire_input_focus")  -- Захватываем фокус ввода для объекта
+
+		self.moving = false                   -- Флаг движения персонажа
+		self.input = vmath.vector3()          -- Вектор ввода (направление движения)
+		self.dir = vmath.vector3(0, 1, 0)     -- Текущая направленность персонажа (по умолчанию вверх)
+		self.speed = 300                      -- Скорость персонажа
+		self.current_animation = "idle"       -- Текущая анимация персонажа
+		spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD) -- Стартуем с анимации покоя
+
+		self.enemies_in_range = {}            -- Таблица для быстрого поиска врагов в зоне
+		self.enemies_list = {}                -- Упорядоченный список врагов для перебора
+		self.current_enemy_index = 1          -- Индекс врага, по которому сейчас производится атака
+		self.fire_cooldown = 0                -- Таймер перезарядки атаки
+		self.fire_interval = ATTACK_INTERVAL  -- Интервал между атаками
+		self.attack_anims = {"front", "back"}  -- Список анимаций атаки
+		self.last_attack_index = 0             -- Индекс последней проигранной анимации атаки
+		self.url_spinemodel = msg.url("#spinemodel")  -- URL spine-модели для управления анимациями
+	end
+
+	-- Добавляет врага в зоны обнаружения и в список для атаки
+	local function add_enemy(self, enemy_id)
+		if not self.enemies_in_range[enemy_id] then
+			self.enemies_in_range[enemy_id] = true
+			table.insert(self.enemies_list, enemy_id)
+		end
+	end
+
+	-- Удаляет врага из зон обнаружения и списка атакованных врагов
+	local function remove_enemy(self, enemy_id)
+		if self.enemies_in_range[enemy_id] then
+			self.enemies_in_range[enemy_id] = nil
+			for i, id in ipairs(self.enemies_list) do
+				if id == enemy_id then
+					table.remove(self.enemies_list, i)
+					if self.current_enemy_index > #self.enemies_list then
+						self.current_enemy_index = 1
+					end
+					break
+				end
+			end
+		end
+	end
+
+	-- Отправляет сообщение врагу о нанесении урона
+	local function attack_enemy(self, enemy_id)
+		if enemy_id and go.exists(enemy_id) then
+			msg.post(enemy_id, "apply_damage", { amount = DAMAGE })
+			print("Attacked enemy:", enemy_id)
+		end
+	end
+
+	-- Основная функция обновления, вызываемая каждый кадр
+	function update(self, dt)
+		-- Обработка таймера перезарядки атаки
+		self.fire_cooldown = math.max(0, self.fire_cooldown - dt)
+
+		-- Если персонаж двигается, обновляем позицию и анимацию
+		if self.moving then
+			local pos = go.get_position()
+			pos = pos + self.dir * self.speed * dt
+			go.set_position(pos)
+			update_animation(self)
+		else
+			-- Если персонаж стоит, обеспечиваем проигрывание анимации покоя
+			if self.current_animation ~= "idle" then
+				spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
+				self.current_animation = "idle"
+			end
+		end
+
+		-- Обнуляем ввод и флаг движения перед следующим кадром
+		self.input.x = 0
+		self.input.y = 0
+		self.moving = false
+
+		if self.fire_cooldown <= 0 and #self.enemies_list > 0 then
+			local player_pos = go.get_position()
+
+			local attacked = false
+			local attempts = 0
+			local max_attempts = #self.enemies_list
+
+			while not attacked and attempts < max_attempts do
+				local enemy_id = self.enemies_list[self.current_enemy_index]
+				if go.exists(enemy_id) then
+					local enemy_pos = go.get_position(enemy_id)
+					local dir_to_enemy = enemy_pos - player_pos
+					
+					if (self.facing_left and dir_to_enemy.x < 0) or (not self.facing_left and dir_to_enemy.x > 0) then
+						-- Проигрываем анимацию атаки
+						if self.last_attack_index == 0 then
+							spine.play_anim("#spinemodel", "attack_no_wearpon_front", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, anim_done)
+							go.set(self.url_spinemodel, "playback_rate", 2)
+							self.last_attack_index = 1
+						else
+							print("fsssssssssss")
+							spine.play_anim("#spinemodel", "attack_no_wearpon_back", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, anim_done)
+							go.set(self.url_spinemodel, "playback_rate", 2)
+							self.last_attack_index = 0
+						end
+						-- Наносим урон выбранному врагу
+						msg.post(enemy_id, "apply_damage", { amount = DAMAGE })
+						print("Attacked enemy:", enemy_id)
+						attacked = true
+					end
+				else
+					remove_enemy(self, self.enemies_list[self.current_enemy_index])
+				end
+
+				-- Переходим к следующему врагу в списке
+				self.current_enemy_index = self.current_enemy_index + 1
+				if self.current_enemy_index > #self.enemies_list then
+					self.current_enemy_index = 1
+				end
+
+				attempts = attempts + 1
+			end
+
+			if attacked then
+				self.fire_cooldown = self.fire_interval
+			end
+		end
+		
+	end
+
+	-- Обработка ввода пользователем (клавиатура, геймпад)
+	function on_input(self, action_id, action)
+		if action_id == hash("up") then
+			self.input.y = 1
+		elseif action_id == hash("down") then
+			self.input.y = -1
+		elseif action_id == hash("left") then
+			self.input.x = -1
+		elseif action_id == hash("right") then
+			self.input.x = 1
+		end
+
+		-- Если есть введённое направление — активируем движение и нормализуем направление
+		if vmath.length(self.input) > 0 then
+			self.moving = true
+			self.dir = vmath.normalize(self.input)
+		end
+	end
+
+	-- Обработка сообщений столкновений и триггеров
+	function on_message(self, message_id, message, sender)
+		-- Сообщение о столкновении с врагом
+		if message_id == COLLISION_RESPONSE and message.own_group == hash("player") and message.group == ENEMIES then
+			print("Player collided with enemy: ID=" .. tostring(sender))
+			-- Сообщение о входе или выходе врага из триггерной зоны
+		elseif message_id == TRIGGER_RESPONSE and message.group == ENEMIES then
+			if message.enter then
+				add_enemy(self, message.other_id)
+				print("Enemy entered range: ID=" .. tostring(message.other_id))
+			else
+				remove_enemy(self, message.other_id)
+				print("Enemy left range: ID=" .. tostring(message.other_id))
+				
+			end
+		end
+
+		-- Коррекция позиции при столкновении
+		if message_id == hash("contact_point_response") then
+			go.set_position(go.get_position() + message.normal * message.distance)
+		end
+	end

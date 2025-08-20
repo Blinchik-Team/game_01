@@ -16,13 +16,13 @@ function init(self)
 	math.randomseed(os.time())
 	self.player_id = factory.create("#playerfactory", vmath.vector3(600, 300, 0))
 	self.enemies = {}
-	-- for i = 1, 10 do
-	-- 	local enemy_id = spawn_enemies()
-	-- 	table.insert(self.enemies, enemy_id)
-	-- 	msg.post(enemy_id, "set_player", { player_id = self.player_id })
-	-- end
+	for i = 1, 10 do
+		local enemy_id = spawn_enemies()
+		table.insert(self.enemies, enemy_id)
+		msg.post(enemy_id, "set_player", { player_id = self.player_id })
+	end
 	msg.post(".", "acquire_input_focus")
-
+	--spawn_enemies()
 	-- Инициализация таймера для спавна врагов
 	self.spawn_timer = 0
 	self.spawn_interval = 1 -- Интервал спавна в секундах
@@ -33,21 +33,21 @@ function final(self)
 end
 
 function update(self, dt)
-	-- Обновляем таймер
-	self.spawn_timer = self.spawn_timer + dt
-
-	-- Проверяем, прошло ли 3 секунды
-	if self.spawn_timer >= self.spawn_interval then
-		-- Спавним нового врага
-		local enemy_id = spawn_enemies()
-		table.insert(self.enemies, enemy_id)
-		-- Отправляем новому врагу ID игрока
-		if go.exists(self.player_id) then
-			msg.post(enemy_id, "set_player", { player_id = self.player_id })
-		end
-		-- Сбрасываем таймер
-		self.spawn_timer = self.spawn_timer - self.spawn_interval
-	end
+-- 	-- Обновляем таймер
+-- 	self.spawn_timer = self.spawn_timer + dt
+-- 
+-- 	-- Проверяем, прошло ли 3 секунды
+-- 	if self.spawn_timer >= self.spawn_interval then
+-- 		-- Спавним нового врага
+-- 		local enemy_id = spawn_enemies()
+-- 		table.insert(self.enemies, enemy_id)
+-- 		-- Отправляем новому врагу ID игрока
+-- 		if go.exists(self.player_id) then
+-- 			msg.post(enemy_id, "set_player", { player_id = self.player_id })
+-- 		end
+-- 		-- Сбрасываем таймер
+-- 		self.spawn_timer = self.spawn_timer - self.spawn_interval
+	--end
 end
 
 function on_input(self, action_id, action)
