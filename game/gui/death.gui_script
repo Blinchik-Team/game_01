@@ -1,0 +1,56 @@
+local GAME_STATE = require "game.core.game_state"
+local GAME_OVER = hash("game_over")
+
+function init(self)
+	self.main_menu = gui.get_node("main_menu/box")
+	self.restart_game = gui.get_node("again/box")
+
+	if GAME_STATE.get_state() == "game" then
+		self.game_over = false -- игра не закончена
+		gui.set_enabled(self.main_menu, true) 
+		gui.set_enabled(self.restart_game, true) 
+		msg.post(".", "release_input_focus")
+	end
+end
+
+function final(self)
+	msg.post(".", "release_input_focus")
+end
+
+function update(self, dt)
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+	-- if message_id == GAME_OVER then
+	-- 	if GAME_STATE.get_state() == "game_over" then
+	-- 		gui.set_enabled(self.main_menu, true) -- показываем надпись "Pause"
+	-- 		gui.set_enabled(self.restart_game, true) -- показываем кнопку "Menu"
+	-- 		msg.post(".", "acquire_input_focus") -- чтобы не багалось
+	-- 	end
+	-- end
+	if message_id == hash("game_over") then
+		msg.post("#", "enable")
+	end 
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.released and GAME_STATE.state == "game_over" then
+		if gui.pick_node(self.main_menu, action.x, action.y) then
+			msg.post("main:/handler", "show_menu")
+		elseif  gui.pick_node(self.restart_game, action.x, action.y) then
+			print("Всё заново")
+		end
+		if gui.pick_node(self.restart_game, action.x, action.y) then
+			msg.post("main:/handler", "restart_game")
+		end
+	end
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

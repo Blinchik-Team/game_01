@@ -18,10 +18,12 @@ scale_mode = stretch
 
 [project]
 title = Viking
+
 dependencies#0 = https://github.com/defold/extension-spine/archive/refs/tags/3.10.0.zip
 
 [graphics]
 default_texture_mag_filter = nearest
+opengl_version_hint = 0
 
 [physics]
 use_fixed_timestep = 0

@@ -40,12 +40,12 @@ nodes {
 }
 nodes {
   position {
-    x: 79.0
-    y: 648.0
+    x: 138.0
+    y: 285.0
   }
   scale {
-    x: 2.0
-    y: 2.0
+    x: 3.530482
+    y: 1.196101
   }
   type: TYPE_BOX
   id: "back_main_menu/box"
@@ -55,12 +55,171 @@ nodes {
   template_node_child: true
 }
 nodes {
+  scale {
+    x: 0.507599
+    y: 1.042984
+  }
   type: TYPE_TEXT
-  text: "Menu\n"
-  "\n"
+  text: "Main menu\n"
   ""
   id: "back_main_menu/text"
   parent: "back_main_menu/box"
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEMPLATE
+  id: "resume"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  position {
+    x: 144.0
+    y: 651.0
+  }
+  scale {
+    x: 3.406942
+    y: 1.321001
+  }
+  type: TYPE_BOX
+  id: "resume/box"
+  parent: "resume"
+  overridden_fields: 1
+  overridden_fields: 3
+  template_node_child: true
+}
+nodes {
+  scale {
+    x: 0.507599
+    y: 1.042984
+  }
+  type: TYPE_TEXT
+  text: "Resume\n"
+  "\n"
+  ""
+  id: "resume/text"
+  parent: "resume/box"
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEMPLATE
+  id: "restart"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  position {
+    x: 144.0
+    y: 559.0
+  }
+  scale {
+    x: 3.345691
+    y: 1.394897
+  }
+  type: TYPE_BOX
+  id: "restart/box"
+  parent: "restart"
+  overridden_fields: 1
+  overridden_fields: 3
+  template_node_child: true
+}
+nodes {
+  scale {
+    x: 0.507599
+    y: 1.042984
+  }
+  type: TYPE_TEXT
+  text: "Restart\n"
+  "\n"
+  ""
+  id: "restart/text"
+  parent: "restart/box"
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEMPLATE
+  id: "end_the_run"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  position {
+    x: 143.0
+    y: 474.0
+  }
+  scale {
+    x: 3.622049
+    y: 1.223715
+  }
+  type: TYPE_BOX
+  id: "end_the_run/box"
+  parent: "end_the_run"
+  overridden_fields: 1
+  overridden_fields: 3
+  template_node_child: true
+}
+nodes {
+  position {
+    y: -0.817184
+  }
+  scale {
+    x: 0.507599
+    y: 1.042984
+  }
+  type: TYPE_TEXT
+  text: "End the run\n"
+  "\n"
+  ""
+  id: "end_the_run/text"
+  parent: "end_the_run/box"
+  overridden_fields: 1
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEMPLATE
+  id: "options"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  position {
+    x: 142.0
+    y: 377.0
+  }
+  scale {
+    x: 3.581253
+    y: 1.280681
+  }
+  type: TYPE_BOX
+  id: "options/box"
+  parent: "options"
+  overridden_fields: 1
+  overridden_fields: 3
+  template_node_child: true
+}
+nodes {
+  position {
+    x: -0.279232
+    y: 0.780835
+  }
+  scale {
+    x: 0.507599
+    y: 1.042984
+  }
+  type: TYPE_TEXT
+  text: "Options"
+  id: "options/text"
+  parent: "options/box"
+  overridden_fields: 1
+  overridden_fields: 3
   overridden_fields: 8
   template_node_child: true
 }

@@ -1,18 +1,24 @@
 local GAME_STATE = require "game.core.game_state"
-
 local PAUSE = hash("pause")
 
 function init(self)
-	msg.post(".", "acquire_input_focus")
-	
+	msg.post(".", "disable")
+	msg.post(".", "release_input_focus")
+
+	-- Получаем GUI ID
 	self.pause_menu = gui.get_node("button/box")
 	self.back_main_menu = gui.get_node("back_main_menu/box")
+	self.restart_button = gui.get_node("restart/box")
+	self.resume_button = gui.get_node("resume/box")
+	self.options = gui.get_node("options/box")
+	self.end_the_run = gui.get_node("end_the_run/box")
 	
 	if GAME_STATE.get_state() == "game" then
 		self.pause_active = false -- игра не на паузе
-		gui.set_enabled(self.pause_menu, false) -- Скрываем pause_menu button
-		gui.set_enabled(self.back_main_menu, false) -- Скрываем back_main_menu button
 		msg.post(".", "release_input_focus") -- чтоб не багалось
+	elseif GAME_STATE.get_state() ~= "game" then
+		GAME_STATE.set_state("game")
+		self.pause_active = false
 	end
 end
 
@@ -30,22 +36,79 @@ function on_message(self, message_id, message, sender)
 	-- Если пришло сообщение (set_pause), показываем gui для меню
 	if message_id == PAUSE then
 		if GAME_STATE.get_state() == "game" then
-			gui.set_enabled(self.pause_menu, true) -- показываем надпись "Pause"
-			gui.set_enabled(self.back_main_menu, true) -- показываем кнопку "Menu"
+			msg.post("/view#pause_menu", "enable")
+			gui.set_enabled(self.pause_menu, true) 
+			gui.set_enabled(self.back_main_menu, true) 
+			gui.set_enabled(self.restart_button, true)
+			gui.set_enabled(self.resume_button, true) 
+			gui.set_enabled(self.options, true)
+			gui.set_enabled(self.end_the_run, true)
 			GAME_STATE.toggle_pause()
-			msg.post(".", "acquire_input_focus") -- чтобы не багалось
+			msg.post("/view#pause_menu", "acquire_input_focus")
+		elseif GAME_STATE.get_state() == "game_shop" then
+			msg.post("/view#pause_menu", "enable")
+			gui.set_enabled(self.pause_menu, true) 
+			gui.set_enabled(self.back_main_menu, true) 
+			gui.set_enabled(self.restart_button, true)
+			gui.set_enabled(self.resume_button, true) 
+			gui.set_enabled(self.options, true)
+			gui.set_enabled(self.end_the_run, true)
+			GAME_STATE.toggle_pause()
+			msg.post("/view#pause_menu", "acquire_input_focus")	
 		elseif GAME_STATE.get_state() == "game_pause" then
-			gui.set_enabled(self.pause_menu, false) -- скрываем надпись "Pause"
-			gui.set_enabled(self.back_main_menu, false) -- показываем кнопку "Menu"
+			gui.set_enabled(self.pause_menu, false) 
+			gui.set_enabled(self.back_main_menu, false) 
+			gui.set_enabled(self.restart_button, false)
+			gui.set_enabled(self.resume_button, false) 
+			gui.set_enabled(self.options, false)
+			gui.set_enabled(self.end_the_run, false)
 			GAME_STATE.toggle_pause()
+			msg.post("/view#pause_menu", "release_input_focus")
 		end
 	end 
 end
 
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.released then
-		if gui.pick_node(self.back_main_menu, action.x, action.y) then
-			msg.post("main:/handler", "show_menu")
+		if  GAME_STATE.get_state() == "game_pause" then
+			if gui.pick_node(self.back_main_menu, action.x, action.y) then
+				msg.post("main:/handler", "show_menu")
+			end
+			if gui.pick_node(self.restart_button, action.x, action.y) then
+				msg.post("main:/handler", "restart_game")
+			end
+			if gui.pick_node(self.resume_button, action.x, action.y) then
+				gui.set_enabled(self.pause_menu, false) 
+				gui.set_enabled(self.back_main_menu, false) 
+				gui.set_enabled(self.restart_button, false)
+				gui.set_enabled(self.resume_button, false) 
+				gui.set_enabled(self.options, false)
+				gui.set_enabled(self.end_the_run, false)
+				GAME_STATE.toggle_pause()
+			end
+			if gui.pick_node(self.options, action.x, action.y) then
+			end
+			if gui.pick_node(self.end_the_run, action.x, action.y) then
+				GAME_STATE.toggle_pause()
+				msg.post("main:/handler", "end_the_run")
+			end
+		elseif GAME_STATE.get_state() == "game_shop" then
+			if gui.pick_node(self.back_main_menu, action.x, action.y) then
+				msg.post("main:/handler", "show_menu")
+			end
+			if gui.pick_node(self.restart_button, action.x, action.y) then
+				msg.post("main:/handler", "restart_game")
+			end
+			if gui.pick_node(self.resume_button, action.x, action.y) then
+				msg.post("#", "disable")
+				msg.post("/view#shop", "on_shop")
+			end
+			if gui.pick_node(self.options, action.x, action.y) then
+			end
+			if gui.pick_node(self.end_the_run, action.x, action.y) then
+				GAME_STATE.toggle_pause()
+				msg.post("main:/handler", "end_the_run")
+			end
 		end
 	end
 end

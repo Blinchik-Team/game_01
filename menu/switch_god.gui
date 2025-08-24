@@ -1,0 +1,356 @@
+script: "/menu/switch_god.gui_script"
+fonts {
+  name: "default"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  position {
+    x: 72.0
+    y: 665.0
+  }
+  scale {
+    x: 2.279705
+    y: 1.297893
+  }
+  type: TYPE_TEMPLATE
+  id: "back_main_menu"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "back_main_menu/box"
+  parent: "back_main_menu"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Back\n"
+  ""
+  id: "back_main_menu/text"
+  parent: "back_main_menu/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 1164.0
+    y: 57.0
+  }
+  scale {
+    x: 1.894006
+    y: 1.156186
+  }
+  type: TYPE_TEMPLATE
+  id: "go"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "go/box"
+  parent: "go"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Go\n"
+  ""
+  id: "go/text"
+  parent: "go/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 167.0
+    y: 306.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_1"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_1/box"
+  parent: "god_1"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Odin\n"
+  ""
+  id: "god_1/text"
+  parent: "god_1/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 256.0
+    y: 305.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_2"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_2/box"
+  parent: "god_2"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Tor\n"
+  "\n"
+  ""
+  id: "god_2/text"
+  parent: "god_2/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 352.0
+    y: 305.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_3"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_3/box"
+  parent: "god_3"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Freya\n"
+  ""
+  id: "god_3/text"
+  parent: "god_3/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 451.0
+    y: 303.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_4"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_4/box"
+  parent: "god_4"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Tyr\n"
+  "\n"
+  ""
+  id: "god_4/text"
+  parent: "god_4/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 570.0
+    y: 302.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_5"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_5/box"
+  parent: "god_5"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Freyr"
+  id: "god_5/text"
+  parent: "god_5/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 699.0
+    y: 301.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_6"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_6/box"
+  parent: "god_6"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Brunhilda\n"
+  ""
+  id: "god_6/text"
+  parent: "god_6/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 820.0
+    y: 297.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_7"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_7/box"
+  parent: "god_7"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Skadi\n"
+  ""
+  id: "god_7/text"
+  parent: "god_7/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 945.0
+    y: 295.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_8"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_8/box"
+  parent: "god_8"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Mimir\n"
+  ""
+  id: "god_8/text"
+  parent: "god_8/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 166.0
+    y: 209.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_9"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_9/box"
+  parent: "god_9"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Vidar\n"
+  ""
+  id: "god_9/text"
+  parent: "god_9/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 264.0
+    y: 205.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_10"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_10/box"
+  parent: "god_10"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Sigyn\n"
+  ""
+  id: "god_10/text"
+  parent: "god_10/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 355.0
+    y: 200.0
+  }
+  type: TYPE_TEMPLATE
+  id: "god_11"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "god_11/box"
+  parent: "god_11"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Loki\n"
+  ""
+  id: "god_11/text"
+  parent: "god_11/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 472.0
+    y: 475.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "Chosen:"
+  font: "default"
+  id: "chosen"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

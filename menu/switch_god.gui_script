@@ -1,0 +1,83 @@
+function init(self)
+	-- При старте игры отлючаем GUI выбора божественного покровителя
+	msg.post(".", "disable")
+	-- Получаем GUI id - back to Main Menu
+	self.back_to_main_menu_button = gui.get_node("back_main_menu/box")
+	-- Получаем GUI id - Go (играть)
+	self.go_to_play = gui.get_node("go/text")
+	-- Получаем ноду выбранного героя - текст нода
+	self.chosen_god_text_node = gui.get_node("chosen")
+	
+	-- Хранит выбранного бога
+	self.chosen_god = nil
+	-- Список богов
+	-- Получение GUI id кнопок и имена, соответствующих выбору бога покровителя
+	self.god_list = {
+		{node = gui.get_node("god_1/box"), name = "Odin"},
+		{node = gui.get_node("god_2/box"), name = "Tor"},
+		{node = gui.get_node("god_3/box"), name = "Freya"},
+		{node = gui.get_node("god_4/box"), name = "Tyr"},
+		{node = gui.get_node("god_5/box"), name = "Freyr"},
+		{node = gui.get_node("god_6/box"), name = "Brunhilda"},
+		{node = gui.get_node("god_7/box"), name = "Skadi"},
+		{node = gui.get_node("god_8/box"), name = "Mimir"},
+		{node = gui.get_node("god_9/box"), name = "Vidar"},
+		{node = gui.get_node("god_10/box"), name = "Sigyn"},
+		{node = gui.get_node("god_11/box"), name = "Loki"},
+	}
+	
+	msg.post(".", "acquire_input_focus")
+end
+
+function final(self)
+	msg.post(".", "release_input_focus")
+end
+
+function update(self, dt)
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("show_switch_god_gui") then
+		msg.post(".", "enable")
+	end
+end
+
+function on_input(self, action_id, action)
+	
+	if action.pressed then	
+		-- Кнопка pause_resume
+		if gui.pick_node(self.back_to_main_menu_button, action.x, action.y) then
+			msg.post(".", "disable")
+			msg.post("/menu#menu", "enable")
+		end    
+		if gui.pick_node(self.go_to_play, action.x, action.y) then
+			if self.chosen_god == nil then 
+				gui.set_text(self.chosen_god_text_node, "Chosen: You didn't choose God!" )
+			else
+				msg.post(".", "disable")
+				msg.post("main:/handler#handler", "show_game")
+			end
+		end
+		-- Выбираем бога покровителя
+		for _, god in ipairs(self.god_list) do
+			if gui.pick_node(god.node, action.x, action.y) then
+				gui.set_text(self.chosen_god_text_node, "Chosen: " .. god.name)
+				self.chosen_god = god.name
+				break
+			end
+		end
+	end
+	if action_id == hash("escape") then 
+		msg.post(".", "disable")
+		msg.post("/menu#menu", "enable")
+	end
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

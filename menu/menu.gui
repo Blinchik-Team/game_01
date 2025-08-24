@@ -1,30 +1,40 @@
 script: "/menu/menu.gui_script"
 nodes {
   position {
-    x: 618.0
-    y: 332.0
+    x: 84.0
+    y: 386.0
   }
   scale {
     x: 3.0
     y: 3.0
   }
   type: TYPE_TEMPLATE
-  id: "button"
+  id: "play"
   inherit_alpha: true
   template: "/menu/button.gui"
 }
 nodes {
+  position {
+    x: 8.0
+    y: -2.0
+  }
+  scale {
+    x: 1.063851
+    y: 0.455743
+  }
   type: TYPE_BOX
-  id: "button/box"
-  parent: "button"
+  id: "play/box"
+  parent: "play"
+  overridden_fields: 1
+  overridden_fields: 3
   template_node_child: true
 }
 nodes {
   type: TYPE_TEXT
   text: "PLAY\n"
   ""
-  id: "button/text"
-  parent: "button/box"
+  id: "play/text"
+  parent: "play/box"
   overridden_fields: 8
   template_node_child: true
 }

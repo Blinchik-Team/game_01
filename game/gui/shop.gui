@@ -1,0 +1,60 @@
+script: "/game/gui/shop.gui_script"
+nodes {
+  position {
+    x: 616.0
+    y: 596.0
+  }
+  scale {
+    x: 3.788787
+    y: 2.611695
+  }
+  type: TYPE_TEMPLATE
+  id: "shop"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "shop/box"
+  parent: "shop"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Shop\n"
+  ""
+  id: "shop/text"
+  parent: "shop/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 1169.0
+    y: 74.0
+  }
+  scale {
+    x: 2.556826
+    y: 2.29157
+  }
+  type: TYPE_TEMPLATE
+  id: "play_from_shop"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "play_from_shop/box"
+  parent: "play_from_shop"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  text: "Play"
+  id: "play_from_shop/text"
+  parent: "play_from_shop/box"
+  overridden_fields: 8
+  template_node_child: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

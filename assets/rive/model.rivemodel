@@ -1,0 +1,3 @@
+scene: "/defold-rive/assets/template.rivescene"
+default_animation: ""
+material: "/defold-rive/assets/rivemodel.material"

@@ -1,0 +1,85 @@
+script: "/game/gui/death.gui_script"
+textures {
+  name: "main"
+  texture: "/main/main.atlas"
+}
+nodes {
+  position {
+    x: 63.0
+    y: 673.0
+  }
+  type: TYPE_TEMPLATE
+  id: "main_menu"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  scale {
+    x: 4.599257
+    y: 2.087375
+  }
+  type: TYPE_BOX
+  texture: "main/red"
+  id: "main_menu/box"
+  parent: "main_menu"
+  overridden_fields: 3
+  overridden_fields: 9
+  template_node_child: true
+}
+nodes {
+  scale {
+    x: 0.539451
+    y: 1.112721
+  }
+  type: TYPE_TEXT
+  text: "Menu\n"
+  ""
+  id: "main_menu/text"
+  parent: "main_menu/box"
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+nodes {
+  position {
+    x: 677.0
+    y: 326.0
+  }
+  scale {
+    x: 2.570813
+    y: 2.658271
+  }
+  type: TYPE_TEMPLATE
+  id: "again"
+  inherit_alpha: true
+  template: "/menu/button.gui"
+}
+nodes {
+  scale {
+    x: 4.782891
+    y: 1.810794
+  }
+  type: TYPE_BOX
+  texture: "main/red"
+  id: "again/box"
+  parent: "again"
+  overridden_fields: 3
+  overridden_fields: 9
+  template_node_child: true
+}
+nodes {
+  scale {
+    x: 0.20005
+    y: 0.712054
+  }
+  type: TYPE_TEXT
+  text: "Restart\n"
+  ""
+  id: "again/text"
+  parent: "again/box"
+  overridden_fields: 3
+  overridden_fields: 8
+  template_node_child: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

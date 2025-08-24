@@ -23,6 +23,27 @@ function on_message(self, message_id, message,sender)
 			GAME_STATE.set_state("main_menu")
 		end
 	elseif message_id == hash("proxy_loaded") then
+		if self.end_the_run == false then
+			self.end_the_run = nil
+			msg.post("menu:/menu#menu", "show_switch_god_gui")
+		end
 		msg.post(sender, "enable")
+	elseif message_id == hash("proxy_unloaded") then
+		if self.restart and sender == msg.url("/handler#game") then
+			msg.post("/handler#game", "load")
+			self.restart = false
+		end
+		if self.end_the_run and sender == msg.url("/handler#game") then
+			msg.post("/handler#menu", "load")
+			self.end_the_run = false
+		end
+	end
+	if message_id == hash("restart_game") then
+		self.restart = true
+		msg.post("/handler#game", "unload") 
+	end
+	if message_id == hash("end_the_run") then
+		self.end_the_run = true
+		msg.post("/handler#game", "unload") 
 	end
 end	

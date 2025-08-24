@@ -5,15 +5,35 @@
 	local ATTACK_INTERVAL = 0.5                             -- Время между атаками в секундах
 	local ATTACK_RANGE = 50                                 -- Радиус, в котором происходит атака
 
+-- 	-- Автоматическая стрельба
+-- 	if self.fire_cooldown <= 0 then
+-- 		local my_pos = go.get_position()
+-- 		local fire_dir = nil
+-- 		local rot = nil
+-- 
+-- 		local closest_enemy = find_closest_enemy(self)
+-- 		if closest_enemy and go.exists(closest_enemy) then
+-- 			local enemy_pos = go.get_position(closest_enemy)
+-- 			fire_dir = vmath.normalize(enemy_pos - my_pos)
+-- 			if vmath.length(fire_dir) < 0.1 then
+-- 				print("Warning: fire_dir near zero, skipping shot")
+-- 				return
+-- 			end
+-- 			-- print("Targeting enemy: ID=" .. tostring(closest_enemy) .. ", Pos=" .. tostring(enemy_pos) .. ", Dir=" .. tostring(fire_dir))
+-- 		else
+-- 			-- Не стреляем, если нет врагов
+-- 			return
+-- 		end
+-- 
+-- 		local angle = math.atan2(fire_dir.y, fire_dir.x)
+-- 		rot = vmath.quat_rotation_z(angle)
+-- 		local offset = fire_dir * 50
+-- 		local bullet_pos = my_pos + offset
+-- 		local bullet_id = factory.create("/arena#bulletsfactory", bullet_pos, rot, { dir = fire_dir })
+-- 		self.fire_cooldown = self.fire_interval
+-- 		-- print("Bullet spawned: ID=" .. tostring(bullet_id) .. ", Pos=" .. tostring(bullet_pos) .. ", Dir=" .. tostring(fire_dir))
+-- 	end
 
-	local function anim_done(self, message_id, message, sender)
-		if message_id == hash("spine_animation_done") then
-			self.is_attacking = false
-			-- Дополнительно можно сделать очистку цели атаки
-			self.target_enemy_id = nil
-		end
-	end
-	
 	-- Функция, обновляющая анимацию персонажа в зависимости от направления движения
 	local function update_animation(self)
 		-- Выбирает направление взгляда по оси X (лево или право)
