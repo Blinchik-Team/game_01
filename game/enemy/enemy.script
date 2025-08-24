@@ -1,14 +1,19 @@
 local COLLISION_RESPONSE = hash("collision_response")
 local CONTACT_POINT_RESPONSE = hash("contact_point_response")
 local PLAYER = hash("player")
-local PLAYER_BULLLET = hash("player_bullet")
+local PLAYER_BULLET = hash("player_bullet")
 local WALL = hash("wall")
+local DAMAGE_RADIUS = 100  -- радиус, в котором игрок получает урон
 
-go.property("speed", 300)
+go.property("speed", 200)
+go.property("attack_range", 50) -- радиус остановки и начала удара
 
 local UP = vmath.vector3(0, 1, 0)
 local RAD_180 = math.pi
 
+function final(self)
+	msg.post(".", "release_input_focus")
+end
 
 local function random_position_on_wall()
 	local wall = math.random(1, 4)
@@ -27,79 +32,187 @@ local function clamp(v, min, max)
 	return math.max(min, math.min(max, v))
 end
 
--- Получить угол до другого игрового объекта
 local function angle_to(id)
 	local my_pos = go.get_position()
 	local other_pos = go.get_position(id)
 	return -math.atan2(other_pos.x - my_pos.x, other_pos.y - my_pos.y)
 end
 
--- Получить расстояние до другого игрового объекта
 local function distance_to(id)
 	local my_pos = go.get_position()
 	local other_pos = go.get_position(id)
 	return vmath.length(my_pos - other_pos)
 end
 
+local function update_animation(self)
+	-- Определяем горизонтальное направление
+	if self.dir.x > 0 then
+		self.facing_left = false
+	elseif self.dir.x < 0 then
+		self.facing_left = true
+	end
+	if self.dir.x ~= 0 then
+		if self.facing_left and self.current_animation ~= "left" then
+			spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
+			go.set(go.get_id(), "scale", vmath.vector3(-1, 1, 1))
+			self.current_animation = "left"
+		elseif not self.facing_left and self.current_animation ~= "right" then
+			spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
+			go.set(go.get_id(), "scale", vmath.vector3(1, 1, 1))
+			self.current_animation = "right"
+		end
+	else
+		if self.dir.y > 0 and self.current_animation ~= "up" then
+			spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
+			local scale_x = self.facing_left and -1 or 1
+			go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
+			self.current_animation = "up"
+		elseif self.dir.y < 0 and self.current_animation ~= "down" then
+			spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
+			local scale_x = self.facing_left and -1 or 1
+			go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
+			self.current_animation = "down"
+		end
+	end
+	if not self.moving and self.current_animation ~= "idle" then
+		spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
+		self.current_animation = "idle"
+	end
+end
+
 function init(self)
 	-- Список ближайших врагов
 	self.nearby = {}
-	-- Инициализируем без игрока
+	-- Инициализация без игрока
 	self.player_found = false
 	self.target_id = nil
+	self.facing_left = false -- стартовая ориентация
+	-- Инициализация списка анимаций атак и переменных
+	self.attack_anims = {"attack_no_wearpon_front", "attack_no_wearpon_back"}
+	self.last_attack_index = 0
+	self.is_attacking = false -- Флаг текущей атаки
+	self.current_animation = "idle"
+	self.url_spinemodel = "#spinemodel"
+	self.is_dead = false
+	self.moving = false
+	self.attack_timer = 0
+	self.stop_movement = false
 end
 
-function update(self, dt)
+-- Функция, управляющая движением к цели
+function move_towards_target(self, direction, dt)
+	if self.stop_movement then
+		self.moving = false
+		return
+	end
 	local pos = go.get_position()
-	local target_angle
+	if self.current_animation ~= "run" and not self.is_attacking then
+		spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
+		self.current_animation = "run"
+	end
+	local move_dist = self.speed * dt
+	go.set_position(pos + direction * move_dist)
+	self.moving = true
+	-- Сброс флага атаки и таймера
+	self.is_attacking = false
+	self.attack_timer = 0
+end
 
-	-- Проверяем, существует ли игрок
-	if self.target_id and go.exists(self.target_id) then
-		target_angle = angle_to(self.target_id) -- Получаем угол к игроку
-		self.player_found = true
-	else
-		-- Если игрок не найден, поворачиваемся в случайном направлении
-		self.player_found = false
-		target_angle = math.rad(math.random(0, 360))
+function start_attack(self)
+	self.is_attacking = true
+	self.last_attack_index = (self.last_attack_index % #self.attack_anims) + 1
+	local attack_anim = self.attack_anims[self.last_attack_index]
+	print("Start attack animation:", attack_anim)
+	spine.play_anim("#spinemodel", attack_anim, go.PLAYBACK_ONCE_FORWARD)
+	self.current_animation = "attack"
+	self.attack_timer = 0.7  -- примерная длительность анимации атаки в секундах
+end
+
+function finish_attack(self)
+	self.is_attacking = false
+	self.current_animation = "idle"
+	spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
+end
+
+
+-- Функция выбора и воспроизведения текущей анимации
+function update_animation_state(self, dt, dist)
+	local prev_facing_left = self.facing_left
+	local direction = self.dir
+	if direction.x < 0 then
+		self.facing_left = true
+	elseif direction.x > 0 then
+		self.facing_left = false
+	end
+	if self.facing_left ~= prev_facing_left then
+		local scale_x = self.facing_left and -1 or 1
+		go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
 	end
 
-	-- Находим ближайшего другого врага
-	local nearby = nil
-	local nearby_distance = nil
-	local nearby_angle = target_angle
-	for nearby_id, _ in pairs(self.nearby) do
-		if go.exists(nearby_id) then
-			local d = distance_to(nearby_id)
-			local a = angle_to(nearby_id)
-			if not nearby or d < nearby_distance then
-				nearby = nearby_id
-				nearby_distance = d
-				nearby_angle = a
+	--print("Distance to target:", dist, "Attack range:", self.attack_range)
+
+	if dist > self.attack_range then
+		move_towards_target(self, direction, dt)
+	else
+		self.moving = false
+		if not self.is_attacking then
+			start_attack(self)
+		else
+			self.attack_timer = self.attack_timer - dt
+			if self.attack_timer <= 0 then
+				finish_attack(self)
 			end
 		end
 	end
+end
 
-	-- Корректируем угол, чтобы избегать ближайшего врага
-	if nearby then
-		local avoidance_factor = (15 / nearby_distance) -- Фактор избегания
-		local avoidance_angle = (target_angle - nearby_angle) * avoidance_factor
-		target_angle = target_angle + clamp(avoidance_angle, -RAD_180, RAD_180)
+function update(self, dt)
+	if not self.is_dead and not self.stop_movement then
+		local pos = go.get_position()
+		local target_pos
+		if self.target_id and go.exists(self.target_id) then
+			target_pos = go.get_position(self.target_id)
+		else
+			target_pos = pos + vmath.vector3(0, 1, 0)
+		end
+		local direction = target_pos - pos
+		direction.z = 0
+		local dist = vmath.length(direction)
+		if dist > 0 then
+			direction = direction / dist
+		end
+		self.dir = direction
+		update_animation_state(self, dt, dist)
+	else
+		self.moving = false
 	end
-
-	-- Поворачиваем к целевому углу
-	local current_rotation = go.get_rotation()
-	local target_rotation = vmath.quat_rotation_z(target_angle)
-	local rotation_speed = 4 -- Скорость поворота
-	local rotation = vmath.slerp(rotation_speed * dt, current_rotation, target_rotation)
-	go.set_rotation(rotation)
-
-	-- Двигаемся в текущем направлении
-	local direction = vmath.rotate(rotation, UP)
-	local distance = self.speed * dt
-	go.set_position(pos + direction * distance)
 end
 
 function on_message(self, message_id, message, sender)
+	if message_id == hash("apply_damage") and not self.is_dead then
+		local my_pos = go.get_position()
+		local attacker_pos = go.get_position(sender)
+
+		local dist = vmath.length(my_pos - attacker_pos)
+		if dist <= DAMAGE_RADIUS then
+			self.is_dead = true
+			self.stop_movement = true
+			self.current_animation = "dead"
+			local delay_time = 0.0  -- задержка в секундах
+			timer.delay(delay_time, false, function()
+				spine.play_anim("#spinemodel", "dead", go.PLAYBACK_ONCE_FORWARD, {}, function(self_cb, message_id_cb, message_cb, sender_cb)
+					if message_id_cb == hash("spine_animation_done") and message_cb.animation_id == hash("dead") then
+						--print("умер")
+						msg.post("#co", "disable") -- отключение коллизий
+						go.delete()
+					end
+				end)
+			end)
+		else
+			-- Игрок слишком далеко — урон не применяется
+			print("Урон не нанесён, слишком далеко от атакующего")
+		end
+	end
 	if message_id == hash("trigger_response") then
 		if message.enter then
 			self.nearby[message.other_id] = true
@@ -107,7 +220,6 @@ function on_message(self, message_id, message, sender)
 			self.nearby[message.other_id] = false
 		end
 	elseif message_id == hash("set_player") then
-		-- Получаем ID игрока из сообщения
 		self.target_id = message.player_id
 		self.player_found = go.exists(self.target_id)
 	end
@@ -115,15 +227,22 @@ function on_message(self, message_id, message, sender)
 		if message.group == PLAYER then
 			local my_pos = go.get_world_position()
 			local other_pos = go.get_world_position(message.other_id)
+
+			-- Проверяем, есть ли self.target_position и если нет - инициализируем её
+			if not self.target_position then
+				self.target_position = my_pos
+			end
+
 			local distance_to_target = vmath.length(my_pos - self.target_position)
 			local distance_to_collision = vmath.length(my_pos - other_pos)
+
 			if distance_to_collision < distance_to_target or not self.target_id then
 				self.target_position = other_pos
 				self.target_id = message.other_id
 			end
 		end
-		if message.group == PLAYER_BULLLET then
-			go.delete()
+		if message.group == PLAYER_BULLET then
+			--go.delete()
 		end
 	elseif message_id == CONTACT_POINT_RESPONSE then
 		if message.group == WALL then

@@ -6,6 +6,7 @@ local MAIN_MENU = "main_menu"
 local GAME = "game"
 local GAME_PAUSE = "game_pause"
 local GAME_OVER = "game_over"
+local GAME_SHOP = "game_shop"
 
 M.state = MAIN_MENU
 
@@ -31,6 +32,12 @@ function M.set_state(new_state)
 	elseif new_state == GAME_OVER then
 		print("GAME_STATE: " .. new_state)
 		msg.post("main:/handler", "set_time_step", { factor = 0, mode = 1 })
+	elseif new_state == GAME_SHOP then
+		-- Отправляем сообщение в коллекцию объекту "main:/handler" для установки временного шага в 0 (пауза физики/анимации)
+		-- factor = 0 останавливает обновление, mode = 1 указывает на непрерывный режим
+		msg.post("main:/handler", "set_time_step", { factor = 0, mode = 1 })
+		-- Выводим отладочное сообщение с новым состоянием
+		print("GAME_STATE: " .. new_state)
 	end
 	-- Обновляем текущее состояние модуля
 	M.state = new_state

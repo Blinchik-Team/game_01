@@ -1,6 +1,6 @@
 function init(self)
 	msg.post(".", "acquire_input_focus")
-	self.play_button = gui.get_node("button/box")
+	self.play_button = gui.get_node("play/box")
 end
 
 function final(self)
@@ -14,14 +14,19 @@ function update(self, dt)
 end
 
 function on_message(self, message_id, message, sender)
-
+	if message_id == hash("show_switch_god_gui") then
+		msg.post("/menu", "disable")
+		msg.post("view#switch_god", "show_switch_god_gui")
+	end
 end
 
 function on_input(self, action_id, action)
 	if action.pressed then	
-		-- Кнопка pause_resume
+		-- Кнопка "Играть"
 		if gui.pick_node(self.play_button, action.x, action.y) then
-			msg.post("main:/handler", "show_game")
+			--msg.post("main:/handler", "show_game")
+			msg.post("/menu", "disable")
+			msg.post("view#switch_god", "show_switch_god_gui")
 		end	
 
 	end
