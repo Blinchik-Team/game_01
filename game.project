@@ -18,7 +18,7 @@ scale_mode = stretch
 
 [project]
 title = Viking
-
+custom_resources = /assets/data/player_stats.json
 dependencies#0 = https://github.com/defold/extension-spine/archive/refs/tags/3.10.0.zip
 
 [graphics]

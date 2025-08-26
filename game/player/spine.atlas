@@ -1,91 +1,136 @@
 images {
-  image: "/assets/animation/images/arm_1.png"
+  image: "/assets/player_spine/images/arm_1.png"
 }
 images {
-  image: "/assets/animation/images/beard.png"
+  image: "/assets/player_spine/images/arm_2.png"
 }
 images {
-  image: "/assets/animation/images/bl_1.png"
+  image: "/assets/player_spine/images/armor_1.png"
 }
 images {
-  image: "/assets/animation/images/bl_2.png"
+  image: "/assets/player_spine/images/axe_1.png"
 }
 images {
-  image: "/assets/animation/images/body.png"
+  image: "/assets/player_spine/images/beard.png"
 }
 images {
-  image: "/assets/animation/images/browe_1.png"
+  image: "/assets/player_spine/images/belt.png"
 }
 images {
-  image: "/assets/animation/images/browe_2.png"
+  image: "/assets/player_spine/images/bl_1.png"
 }
 images {
-  image: "/assets/animation/images/clo_down.png"
+  image: "/assets/player_spine/images/bl_2.png"
 }
 images {
-  image: "/assets/animation/images/clo_middle.png"
+  image: "/assets/player_spine/images/body.png"
 }
 images {
-  image: "/assets/animation/images/clo_up_1.png"
+  image: "/assets/player_spine/images/browe_1.png"
 }
 images {
-  image: "/assets/animation/images/clo_up_2.png"
+  image: "/assets/player_spine/images/browe_2.png"
 }
 images {
-  image: "/assets/animation/images/cloack.png"
+  image: "/assets/player_spine/images/clo_down.png"
 }
 images {
-  image: "/assets/animation/images/face.png"
+  image: "/assets/player_spine/images/clo_middle.png"
 }
 images {
-  image: "/assets/animation/images/foot_1.png"
+  image: "/assets/player_spine/images/clo_up_1.png"
 }
 images {
-  image: "/assets/animation/images/foot_2.png"
+  image: "/assets/player_spine/images/clo_up_2.png"
 }
 images {
-  image: "/assets/animation/images/hair_2.png"
+  image: "/assets/player_spine/images/cloack.png"
 }
 images {
-  image: "/assets/animation/images/hair_front.png"
+  image: "/assets/player_spine/images/coin.png"
 }
 images {
-  image: "/assets/animation/images/hand_1.png"
+  image: "/assets/player_spine/images/face.png"
 }
 images {
-  image: "/assets/animation/images/hand_2.png"
+  image: "/assets/player_spine/images/foot_1.png"
 }
 images {
-  image: "/assets/animation/images/horn_1.png"
+  image: "/assets/player_spine/images/foot_2.png"
 }
 images {
-  image: "/assets/animation/images/leg_1.png"
+  image: "/assets/player_spine/images/fx_slash.png"
 }
 images {
-  image: "/assets/animation/images/leg_2.png"
+  image: "/assets/player_spine/images/hair_2.png"
 }
 images {
-  image: "/assets/animation/images/mus.png"
+  image: "/assets/player_spine/images/hair_front.png"
 }
 images {
-  image: "/assets/animation/images/nose.png"
+  image: "/assets/player_spine/images/hand_1.png"
 }
 images {
-  image: "/assets/animation/images/shelmed.png"
+  image: "/assets/player_spine/images/hand_2.png"
 }
 images {
-  image: "/assets/animation/images/veco_1.png"
+  image: "/assets/player_spine/images/hand_2_f.png"
 }
 images {
-  image: "/assets/animation/images/veco_2.png"
+  image: "/assets/player_spine/images/helmed_1.png"
 }
 images {
-  image: "/assets/animation/images/zr_1.png"
+  image: "/assets/player_spine/images/helmed_2.png"
 }
 images {
-  image: "/assets/animation/images/zr_2.png"
+  image: "/assets/player_spine/images/helmed_3.png"
 }
 images {
-  image: "/assets/animation/images/\320\241\320\273\320\276\320\271 12.png"
+  image: "/assets/player_spine/images/horn_1.png"
+}
+images {
+  image: "/assets/player_spine/images/horn_2.png"
+}
+images {
+  image: "/assets/player_spine/images/leg_1.png"
+}
+images {
+  image: "/assets/player_spine/images/leg_2.png"
+}
+images {
+  image: "/assets/player_spine/images/mus.png"
+}
+images {
+  image: "/assets/player_spine/images/nose.png"
+}
+images {
+  image: "/assets/player_spine/images/photo_2025-08-21_01-32-13 \320\272\320\276\320\277\320\270\321\217.png"
+}
+images {
+  image: "/assets/player_spine/images/photo_2025-08-21_01-32-13.png"
+}
+images {
+  image: "/assets/player_spine/images/shelmed.png"
+}
+images {
+  image: "/assets/player_spine/images/shield_1.png"
+}
+images {
+  image: "/assets/player_spine/images/sword_1.png"
+}
+images {
+  image: "/assets/player_spine/images/veco_1.png"
+}
+images {
+  image: "/assets/player_spine/images/veco_2.png"
+}
+images {
+  image: "/assets/player_spine/images/zr_1.png"
+}
+images {
+  image: "/assets/player_spine/images/zr_2.png"
+}
+images {
+  image: "/assets/player_spine/images/\320\241\320\273\320\276\320\271 1.png"
 }
 extrude_borders: 2

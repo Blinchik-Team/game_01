@@ -2,8 +2,8 @@ local GAME_STATE = require "game.core.game_state"
 local PAUSE = hash("pause")
 
 function init(self)
-	msg.post(".", "disable")
-	msg.post(".", "release_input_focus")
+	msg.post("#", "disable")
+	msg.post("#", "release_input_focus")
 
 	-- Получаем GUI ID
 	self.pause_menu = gui.get_node("button/box")

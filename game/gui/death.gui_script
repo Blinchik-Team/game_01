@@ -2,6 +2,7 @@ local GAME_STATE = require "game.core.game_state"
 local GAME_OVER = hash("game_over")
 
 function init(self)
+	msg.post("#", "disable")
 	self.main_menu = gui.get_node("main_menu/box")
 	self.restart_game = gui.get_node("again/box")
 

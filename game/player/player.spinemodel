@@ -1,4 +1,4 @@
 spine_scene: "/game/player/player.spinescene"
 default_animation: "idle"
-skin: ""
+skin: "clothes/helmed/helmed_1"
 material: "/defold-spine/assets/spine.material"

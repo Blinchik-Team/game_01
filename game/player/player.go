@@ -60,7 +60,7 @@ embedded_components {
   type: "spinemodel"
   data: "spine_scene: \"/game/player/player.spinescene\"\n"
   "default_animation: \"run\"\n"
-  "skin: \"\"\n"
+  "skin: \"body/body_1\"\n"
   "material: \"/defold-spine/assets/spine.material\"\n"
   ""
   position {

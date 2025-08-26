@@ -22,7 +22,51 @@ key_trigger {
   input: KEY_SPACE
   action: "fire"
 }
+key_trigger {
+  input: KEY_1
+  action: "item1"
+}
+key_trigger {
+  input: KEY_2
+  action: "item2"
+}
+key_trigger {
+  input: KEY_3
+  action: "item3"
+}
+key_trigger {
+  input: KEY_4
+  action: "item4"
+}
+key_trigger {
+  input: KEY_5
+  action: "item5"
+}
+key_trigger {
+  input: KEY_F1
+  action: "console"
+}
+key_trigger {
+  input: KEY_BACKSPACE
+  action: "backspace"
+}
+key_trigger {
+  input: KEY_ENTER
+  action: "enter"
+}
 mouse_trigger {
   input: MOUSE_BUTTON_1
   action: "touch"
+}
+text_trigger {
+  input: TEXT
+  action: "text"
+}
+text_trigger {
+  input: TEXT
+  action: "key_backspace"
+}
+text_trigger {
+  input: TEXT
+  action: ""
 }
