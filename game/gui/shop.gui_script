@@ -1,6 +1,7 @@
 local GAME_STATE = require "game.core.game_state"
 
 function init(self)
+	msg.post("#", "disable")
 	msg.post(".", "acquire_input_focus")
 	self.shop = gui.get_node("shop/box")
 	self.play_from_shop = gui.get_node("play_from_shop/box")

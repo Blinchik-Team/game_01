@@ -1,0 +1,97 @@
+script: "/game/gui/develop_gui.gui_script"
+fonts {
+  name: "default"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  position {
+    y: 720.0
+  }
+  scale {
+    x: 3.414413
+    y: 7.225574
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.302
+    y: 0.302
+    z: 0.302
+  }
+  type: TYPE_BOX
+  id: "console_panel"
+  pivot: PIVOT_NW
+  inherit_alpha: true
+  clipping_inverted: true
+  alpha: 0.17
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 2.661613
+    y: 30.58037
+  }
+  scale {
+    x: 3.396992
+    y: 0.573255
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.302
+    y: 0.302
+    z: 0.302
+  }
+  type: TYPE_BOX
+  id: "input_field"
+  pivot: PIVOT_W
+  inherit_alpha: true
+  clipping_inverted: true
+  alpha: 0.54
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 1.272241
+    y: -5.294927
+  }
+  scale {
+    x: 0.368144
+    y: 2.394422
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "Input command"
+  font: "default"
+  id: "input_text"
+  pivot: PIVOT_W
+  parent: "input_field"
+}
+nodes {
+  position {
+    x: 0.301832
+    y: 719.48206
+  }
+  scale {
+    x: 1.342808
+    y: 0.940527
+  }
+  size {
+    x: 214.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "gg"
+  font: "default"
+  id: "output_text"
+  pivot: PIVOT_NW
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

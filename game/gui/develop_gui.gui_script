@@ -1,0 +1,233 @@
+local GAME_STATE = require("game.core.game_state")
+
+function remove_last_char(str)
+	local len = #str
+	if len > 0 then
+		return string.sub(str, 1, len - 1)
+	else
+		return str
+	end
+end
+
+local function pprint_table(t, indent)
+	indent = indent or 0
+	local prefix = string.rep("  ", indent)
+	local result = ""
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			result = result .. prefix .. tostring(k) .. ":\n" .. pprint_table(v, indent + 1)
+		else
+			result = result .. prefix .. tostring(k) .. ": " .. tostring(v) .. "\n"
+		end
+	end
+	return result
+end
+
+local function pprint_table(t, indent)
+	indent = indent or 0
+	local prefix = string.rep("  ", indent)
+	local result = ""
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			result = result .. prefix .. tostring(k) .. ":\n" .. pprint_table(v, indent + 1)
+		else
+			result = result .. prefix .. tostring(k) .. ": " .. tostring(v) .. "\n"
+		end
+	end
+	return result
+end
+
+local function set_nested_field(tbl, key_path, value)
+	local cur = tbl
+	for i = 1, #key_path - 1 do
+		local key = key_path[i]
+		if cur[key] == nil then
+			-- Можно создавать вложенную таблицу, если надо
+			cur[key] = {}
+		end
+		cur = cur[key]
+		if type(cur) ~= "table" then
+			return false, "Intermediate key '" .. key .. "' is not a table"
+		end
+	end
+	local final_key = key_path[#key_path]
+	if cur[final_key] == nil then
+		return false, "Final key '" .. final_key .. "' not found"
+	end
+	cur[final_key] = value
+	return true
+end
+
+function process_command(self, command)
+	-- Добавляем новую команду в массив
+	table.insert(self.output_text, "> " .. command)
+
+	-- Ограничиваем историю не больше 30 команд
+	while #self.output_text > 3 do
+		table.remove(self.output_text, 1)
+	end
+	if command == "help" then
+		table.insert(self.output_text, "Available commands:")
+		table.insert(self.output_text, " pl_stats                - Show player stats")
+		table.insert(self.output_text, " set <key> <value>       - Set stat key to value")
+		table.insert(self.output_text, "   Use dot notation for nested keys, e.g.: set critical.hp 10")
+
+	else
+		local cmd, key_str, value = command:match("^(%w+)%s+([%w%.]+)%s+(.*)$")
+
+		if cmd == "set" and key_str and value then
+			if self.player_stats then
+				-- Разбиваем ключ по точкам
+				local key_path = {}
+				for part in string.gmatch(key_str, "[^%.]+") do
+					table.insert(key_path, part)
+				end
+
+				local num_value = tonumber(value)
+				local final_value = num_value or value
+
+				local ok, err = set_nested_field(self.player_stats, key_path, final_value)
+				if ok then
+					table.insert(self.output_text, string.format("Stat '%s' set to %s", key_str, tostring(final_value)))
+				else
+					table.insert(self.output_text, "Error: " .. err)
+				end
+			else
+				table.insert(self.output_text, "Player stats not available")
+			end
+
+		elseif command == "pl_stats" then
+			local function pprint_table(t, indent)
+				indent = indent or 0
+				local prefix = string.rep("  ", indent)
+				local result = ""
+				for k, v in pairs(t) do
+					if type(v) == "table" then
+						result = result .. prefix .. tostring(k) .. ":\n" .. pprint_table(v, indent + 1)
+					else
+						result = result .. prefix .. tostring(k) .. ": " .. tostring(v) .. "\n"
+					end
+				end
+				return result
+			end
+
+			if self.player_stats then
+				local stats_str = pprint_table(self.player_stats)
+				table.insert(self.output_text, stats_str)
+			else
+				table.insert(self.output_text, "No player stats available")
+			end
+
+		else
+			table.insert(self.output_text, "Unknown command: " .. command)
+			table.insert(self.output_text, "Type 'help' for a list of commands")
+		end
+	end
+
+	local display_text = table.concat(self.output_text, "\n")
+	gui.set_text(self.output_node, display_text)
+end
+
+
+
+
+
+
+function init(self)
+	--msg.post(".", "acquire_input_focus")
+	msg.post("#", "disable")
+
+	self.input_node = gui.get_node("input_text")    -- GUI нода для ввода
+	self.output_node = gui.get_node("output_text")  -- GUI нода для вывода истории
+	self.input_text = ""  -- Текущая строка ввода
+	self.output_text = {} -- История команд
+	
+end
+
+-- function process_command(self, command)
+-- 	
+-- 	-- Добавляем новую команду в массив
+-- 	table.insert(self.output_text, "> " .. command)
+-- 	
+-- 	-- Разбиваем команду вида "set ключ значение"
+-- 	local cmd, key, value = command:match("^(%w+)%s+(%w+)%s*(%d*)$")
+-- 	
+-- 	-- Если строк больше 22, удаляем самую старую (первую)
+-- 	if #self.output_text > 22 then
+-- 		table.remove(self.output_text, 1)
+-- 	end
+-- 	
+-- 	if cmd == "set" and key and value ~= "" then
+-- 		local num_value = tonumber(value)
+-- 		if self.stats and self.stats[key] ~= nil and num_value then
+-- 			self.stats[key] = num_value
+-- 			table.insert(self.output_text, string.format("Стат %s установлен в %d", key, num_value))
+-- 		else
+-- 			table.insert(self.output_text, "Ошибка: неверный ключ или значение")
+-- 		end
+-- 	elseif command == "pl_stats" then
+-- 		-- Конвертируем таблицу player_stats в строку для вывода
+-- 		local stats_str = ""
+-- 		if self.player_stats then
+-- 			for k, v in pairs(self.player_stats) do
+-- 				stats_str = stats_str .. string.format("%s: %s\n", k, tostring(v))
+-- 			end
+-- 		else
+-- 			stats_str = "No player stats available"
+-- 		end
+-- 		table.insert(self.output_text, stats_str)
+-- 	else
+-- 		table.insert(self.output_text, "Unknown command: " .. command)
+-- 	end
+-- 	
+-- 	-- Собираем все строки в одну для отображения
+-- 	local display_text = table.concat(self.output_text, "\n")
+-- 	gui.set_text(self.output_node, display_text)
+-- end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt)
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("console") then
+		msg.post("#", "enable")
+		msg.post("#", "acquire_input_focus")
+		self.player_stats = message.player_stats
+		print(self.player_stats)
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("text") then
+		self.input_text = self.input_text .. action.text
+		gui.set_text(self.input_node, self.input_text)
+	elseif action_id == hash("backspace") and action.pressed then
+		self.input_text = string.sub(self.input_text, 1, -2)
+		gui.set_text(self.input_node, self.input_text)
+	elseif action_id == hash("enter") and action.pressed then
+		process_command(self, self.input_text) -- Используем явный вызов, как ты исправил
+		self.input_text = ""
+		gui.set_text(self.input_node, self.input_text)
+	end
+	if action_id == hash("console") and action.released then 
+		msg.post("#", "release_input_focus")
+		msg.post("#", "disable")
+		msg.post("/arena#game", "close_console")
+	end
+end
+
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end
