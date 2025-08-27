@@ -104,3 +104,9 @@ embedded_components {
   data: "prototype: \"/game/enemy/enemy_16/enemy_16.go\"\n"
   ""
 }
+embedded_components {
+  id: "player_factory"
+  type: "factory"
+  data: "prototype: \"/game/player/player.go\"\n"
+  ""
+}

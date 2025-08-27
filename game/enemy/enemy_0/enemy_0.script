@@ -24,9 +24,11 @@ end
 function init(self)
 	-- Получаем id врага и номер волны из параметров, переданных при спавне
 	self.url_spinemodel = "#spinemodel"
+	
+	self.player_id = self.player_id
 	self.enemy_id = self.enemy_id or 0
 	self.wave_number = self.wave_number or 1
-
+	
 	local data = EnemyInfo[self.enemy_id]
 
 	-- Здоровье с учетом множителя на волну
@@ -57,5 +59,10 @@ function on_message(self, message_id, message, sender)
 		if self.current_hp <= 0 then
 			die(self)
 		end
+	end
+	if message_id == hash("request_player_id") then
+		msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+	elseif message_id == hash("player_id") then
+		self.player_id = message.player_id
 	end
 end

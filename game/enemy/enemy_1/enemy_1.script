@@ -1,61 +1,104 @@
--- local EnemyInfo = require("game.enemy.enemy_info")
--- 
--- 
--- local function print_properties(self)
--- 	local properties = {
--- 		"id",
--- 		"health",
--- 		"hpMultiplierPerWave",
--- 		"speed",
--- 		"speedMultiplierPerWave",
--- 		"meleeDamage",
--- 		"rangedDamage",
--- 		"damageMultiplierPerWave",
--- 		"goldDropAmount",
--- 		"beerDropChancePercent",
--- 		"chestDropChancePercent",
--- 		"alive"
--- 	}
--- 
--- 	print("----- Enemy properties -----")
--- 	for _, prop in ipairs(properties) do
--- 		print(prop, self[prop])
--- 	end
--- 	print("----------------------------")
--- end
--- 
--- -- go.property("id", 0)
--- -- go.property("health", 10)
--- -- go.property("hpMultiplierPerWave", 1.0)
--- -- go.property("speed", 0)
--- -- go.property("speedMultiplierPerWave", 1.0)
--- -- go.property("meleeDamage", 0)
--- -- go.property("rangedDamage", 0)
--- -- go.property("damageMultiplierPerWave", 1.0)
--- -- go.property("goldDropAmount", 0)
--- -- go.property("beerDropChancePercent", 0)
--- -- go.property("chestDropChancePercent", 0)
--- 
--- function init(self)
--- 	self.id = self.id or 1
--- 	local data = EnemyInfo[self.id]
--- 	if data then
--- 		-- Используйте свойства из factory.create, если переданы, иначе из модуля
--- 		self.health = self.health ~= 10 and self.health or data.health
--- 		self.hpMultiplierPerWave = self.hpMultiplierPerWave ~= 1 and self.hpMultiplierPerWave or data.hpMultiplierPerWave
--- 		self.speed = self.speed ~= 0 and self.speed or data.speed
--- 		self.speedMultiplierPerWave = self.speedMultiplierPerWave ~= 1 and self.speedMultiplierPerWave or data.speedMultiplierPerWave
--- 		self.meleeDamage = self.meleeDamage ~= 0 and self.meleeDamage or data.meleeDamage
--- 		self.rangedDamage = self.rangedDamage ~= 0 and self.rangedDamage or data.rangedDamage
--- 		self.damageMultiplierPerWave = self.damageMultiplierPerWave ~= 1 and self.damageMultiplierPerWave or data.damageMultiplierPerWave
--- 		self.goldDropAmount = self.goldDropAmount ~= 0 and self.goldDropAmount or data.goldDropAmount
--- 		self.beerDropChancePercent = self.beerDropChancePercent ~= 0 and self.beerDropChancePercent or data.beerDropChancePercent
--- 		self.chestDropChancePercent = self.chestDropChancePercent ~= 0 and self.chestDropChancePercent or data.chestDropChancePercent
--- 
--- 		self.alive = true
--- 	else
--- 		pprint("Enemy data not found for id:", self.id)
--- 	end
--- 	print_properties(self)
--- end
--- 
+local EnemyInfo = require "game.enemy.enemy_info"
+
+local function die(self)
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
+		go.delete()
+	end)
+end
+
+function init(self)
+	-- уникальное смещение цели, чтобы враги не шли в одну точку
+	local max_offset = 30
+	self.target_offset = vmath.vector3(
+	(math.random() - 0.5) * 2 * max_offset,
+	(math.random() - 0.5) * 2 * max_offset,
+	0
+)
+self.move_time = 0
+self.phase = math.random() * 2 * math.pi  -- случайная начальная фаза
+self.url_spinemodel = "#spinemodel"
+self.player_id = self.player_id
+self.enemy_id = self.enemy_id or 1 -- Смелый цверг
+self.wave_number = self.wave_number or 1
+local data = EnemyInfo[self.enemy_id]
+self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
+self.current_hp = self.max_hp
+-- базовая скорость с разбросом ±20%
+local speed_variation = 0.2
+local random_factor = 1 + (math.random() * 2 - 1) * speed_variation
+self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number) * random_factor
+self.melee_damage = data.meleeDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+self.ranged_damage = data.rangedDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+self.gold_drop_amount = data.goldDropAmount
+self.beer_drop_chance_percent = data.beerDropChancePercent
+self.chest_drop_chance_percent = data.chestDropChancePercent
+self.name = data.name
+self.behavior = data.behavior
+self.special_action = data.specialAction
+-- Начинаем с анимации "idle"
+spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+self.is_moving = false
+end
+
+function update(self, dt)
+if not self.player_id then
+	print("No player_id")
+	return
+end
+self.move_time = self.move_time + dt
+local player_pos = go.get_position(self.player_id)
+local enemy_pos = go.get_position()
+if not self.target_offset then
+	local max_offset = 30
+	self.target_offset = vmath.vector3(
+	(math.random() - 0.5) * 2 * max_offset,
+	(math.random() - 0.5) * 2 * max_offset,
+	0
+)
+end
+local adjusted_target = player_pos + self.target_offset
+local direction = adjusted_target - enemy_pos
+local length = vmath.length(direction)
+if length > 0 and self.speed and self.speed > 0 then
+direction = vmath.normalize(direction)
+local offset_x = math.sin(self.move_time * 5 + self.phase) * 3
+local offset_y = math.cos(self.move_time * 5 + self.phase) * 3
+local new_pos = enemy_pos + direction * self.speed * dt + vmath.vector3(offset_x * dt, offset_y * dt, 0)
+go.set_position(new_pos)
+
+-- Отражение spine-модели по оси X в зависимости от направления
+local scale = go.get_scale()
+if direction.x < 0 then
+	scale.x = -math.abs(scale.x)
+else
+	scale.x = math.abs(scale.x)
+end
+go.set(go.get_id(), "scale", scale)
+
+-- Запуск анимации бега, если враг еще не в движении
+if not self.is_moving then
+	spine.play_anim(self.url_spinemodel, "run", go.PLAYBACK_LOOP_FORWARD)
+	self.is_moving = true
+end
+else
+-- Враг не двигается, переключаем анимацию на idle
+if self.is_moving then
+	spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD)
+	self.is_moving = false
+end
+end
+end
+
+function on_message(self, message_id, message, sender)
+if message_id == hash("damage") then
+self.current_hp = self.current_hp - message.amount
+if self.current_hp <= 0 then
+	die(self)
+end
+end
+if message_id == hash("request_player_id") then
+msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+elseif message_id == hash("player_id") then
+self.player_id = message.player_id
+end
+end

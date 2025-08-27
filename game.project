@@ -28,6 +28,8 @@ opengl_version_hint = 0
 [physics]
 use_fixed_timestep = 0
 debug = 0
+trigger_overlap_capacity = 500
+max_collisions = 500
 
 [sprite]
 max_count = 128

@@ -1,3 +1,17 @@
+local function spawn_player(self, position)
+	if self.player_id then return end
+	self.player_id = factory.create("#player_factory", position)
+	print("Player spawned:", self.player_id)
+	-- Сообщаем всем врагам player_id
+	if self.enemies then
+		for _, enemy_id in ipairs(self.enemies) do
+			msg.post(enemy_id, "player_spawned", { player_id = self.player_id })
+		end
+	end
+end
+
+
+
 local function random_position()
 	return vmath.vector3(math.random(64, 1156 - 128), math.random(64, 640 - 128), 0)
 end
@@ -26,18 +40,26 @@ local function spawn_enemy(self, position, enemy_id)
 	local props = {
 		health = enemy_stats.health,
 		speed = enemy_stats.speed,
-		-- добавьте прочие нужные параметры здесь
+		player_id = self.player_id, -- self.player_id должен быть валиден здесь
 	}
-
 	local created_id = factory.create(factory_id, position, nil, props)
+	
 	if created_id then
 		self.current_enemies = self.current_enemies + 1
 		-- print("Текущее количество enemies: " .. self.current_enemies)
 	end
+	msg.post(created_id, "request_player_id")
+	
+	self.enemies = self.enemies or {}
+	table.insert(self.enemies, created_id)
+	
 	return created_id
 end
 
 function init(self)
+	self.enemies = {}
+	self.player_id = nil
+	
 	local file_path = "/assets/data/enemies_stats.json"
 	local content, err = sys.load_resource(file_path)
 	if not content then
@@ -80,15 +102,20 @@ function init(self)
 	}
 
 	-- Новые параметры спавна
-	self.max_enemies = 10        -- Максимальное количество мобов на сцене (Ориентировочно 50)
+	self.max_enemies = 50        -- Максимальное количество мобов на сцене (Ориентировочно 50)
 	self.spawn_rate = 10         -- Скорость спавна (мобов в секунду)
 	self.current_enemies = 0     -- Текущие живые мобы
 	self.spawn_timer = 0         -- Таймер для накопления времени спавна
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("spawn_enemy_request") then
+	if message_id == hash("spawn_player_request") then
+		spawn_player(self, message.position)
+	elseif message_id == hash("spawn_enemy_request") then
 		spawn_enemy(self, message.position, message.enemy_id)
+	end
+	if message_id == hash("response_enemy_id") then
+		msg.post(message.enemy_url, "player_id", { player_id = self.player_id })
 	end
 end
 
@@ -105,7 +132,7 @@ function update(self, dt)
 			-- Здесь нужно реализовать логику получения позиции для спавна
 			local spawn_position = get_spawn_position()
 			-- Можно рандомно выбирать enemy_id или по вашей логике
-			local enemy_id = math.random(0, 0)
+			local enemy_id = math.random(1, 1)
 			spawn_enemy(self, spawn_position, enemy_id)
 			
 		end

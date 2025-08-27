@@ -20,8 +20,9 @@ end
 
 function init(self)	
 	math.randomseed(os.time())
-	self.player_id = factory.create("#playerfactory", vmath.vector3(600, 300, 0))
-
+	-- self.player_id = factory.create("#playerfactory", vmath.vector3(600, 300, 0))
+	local spawn_position = vmath.vector3(600, 300, 0)
+	msg.post("/spawner", "spawn_player_request", { position = spawn_position })
 	-- Отправить сообщение спавнеру с параметрами
 	
 	self.enemies = {}
