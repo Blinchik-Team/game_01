@@ -1,0 +1,9 @@
+embedded_components {
+  id: "spinemodel"
+  type: "spinemodel"
+  data: "spine_scene: \"/game/enemy/enemy.spinescene\"\n"
+  "default_animation: \"idle\"\n"
+  "skin: \"enemy_6\"\n"
+  "material: \"/defold-spine/assets/spine.material\"\n"
+  ""
+}

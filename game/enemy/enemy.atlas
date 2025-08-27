@@ -1,0 +1,52 @@
+images {
+  image: "/assets/enemy_spine/images/enemy_0.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_1.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_2.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_3.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_4.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_5.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_6.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_7.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_8.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_9.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_10.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_11.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_12.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_13.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_14.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_15.png"
+}
+images {
+  image: "/assets/enemy_spine/images/enemy_16.png"
+}
+extrude_borders: 2

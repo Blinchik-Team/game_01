@@ -10,7 +10,7 @@ embedded_components {
   "friction: 0.1\n"
   "restitution: 0.5\n"
   "group: \"player\"\n"
-  "mask: \"enemies\"\n"
+  "mask: \"enemy\"\n"
   "mask: \"ground\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"

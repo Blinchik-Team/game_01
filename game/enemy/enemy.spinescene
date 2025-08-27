@@ -1,0 +1,2 @@
+spine_json: "/assets/enemy_spine/enemy.spinejson"
+atlas: "/game/enemy/enemy.atlas"

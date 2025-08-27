@@ -7,9 +7,12 @@ local function random_position()
 	return vmath.vector3(math.random(64, 1156 - 128), math.random(64, 640 - 128), 0)
 end
 
-local function spawn_enemies()
-	return factory.create("#enemiesfactory", random_position())
-end
+-- local function spawn_enemies(self)
+-- 	local spawn_position = random_position()
+-- 	local enemy_type = 0	
+-- 	msg.post("/spawner#spawner", "spawn_enemy_request", { position = spawn_position, enemy_id = enemy_type })
+-- 	return self.spawned_enemy_id
+-- end
 
 local function spawn_player(position)
 	return factory.create("#playerfactory", position)
@@ -19,7 +22,7 @@ function init(self)
 	math.randomseed(os.time())
 	self.player_id = factory.create("#playerfactory", vmath.vector3(600, 300, 0))
 
-	
+	-- Отправить сообщение спавнеру с параметрами
 	
 	self.enemies = {}
 	msg.post(".", "acquire_input_focus")
@@ -60,18 +63,27 @@ function update(self, dt)
 			GAME_STATE.set_state("game_shop")
 			msg.post("/view#shop", "on_shop")
 		end
-
-		if self.spawn_enabled then
-			self.spawn_timer = self.spawn_timer + dt
-			if self.spawn_timer >= self.spawn_interval then
-				local enemy_id = spawn_enemies()
-				table.insert(self.enemies, enemy_id)
-				if go.exists(self.player_id) then
-					msg.post(enemy_id, "set_player", { player_id = self.player_id })
-				end
-				self.spawn_timer = self.spawn_timer - self.spawn_interval
-			end
-		end
+		-- local spawn_position = random_position()
+		-- local enemy_type = 3
+		-- msg.post("/spawner", "spawn_enemy_request", { position = spawn_position, enemy_id = enemy_type })
+		-- if self.spawn_enabled then
+		-- 	self.spawn_timer = self.spawn_timer + dt
+		-- 	if self.spawn_timer >= self.spawn_interval then
+		-- 		local spawn_position = random_position()
+		-- 		local enemy_type = 3
+		-- 		msg.post("/spawner", "spawn_enemy_request", { position = spawn_position, enemy_id = enemy_type })
+		-- 		
+		-- 		local enemy_id = self.spawned_enemy_id
+		-- 		table.insert(self.enemies, enemy_id)
+		-- 		if go.exists(self.player_id) and enemy_id ~= nil then
+		-- 			local ok, err = pcall(msg.post, enemy_id, "set_player", { player_id = self.player_id })
+		-- 			if not ok then
+		-- 				print("Failed to post message set_player:", err)
+		-- 			end
+		-- 		end
+		-- 		self.spawn_timer = self.spawn_timer - self.spawn_interval
+		-- 	end
+		-- end
 		-- Отправка оставшегося времени таймера в GUI (TIMER_WAVE_LEVEL секунд минус текущее время)
 		local time_left = math.max(0, self.wave_duration - math.floor(self.total_time))
 		msg.post("/view#arena", "update_timer", { time = time_left, current_wave = self.current_wave })
@@ -145,5 +157,8 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("close_console") then
 		msg.post(self.player_id, "acquire_input_focus")
 		GAME_STATE.set_state("game")
+	end
+	if message_id == hash("enemy_created") then
+		self.spawned_enemy_id = message.created_enemy_id
 	end
 end 

@@ -1,6 +1,6 @@
 	local COLLISION_RESPONSE = hash("collision_response")   -- Константа для идентификации сообщений о столкновениях
 	local TRIGGER_RESPONSE = hash("trigger_response")       -- Константа для идентификации сообщений о триггерах
-	local ENEMIES = hash("enemies")                         -- Константа для хэша группы врагов
+	local ENEMY = hash("enemy")                         -- Константа для хэша группы врагов
 	local DAMAGE = 10                                       -- Количество урона, наносимого врагам
 	local ATTACK_INTERVAL = 0.5                             -- Время между атаками в секундах
 	local ATTACK_RANGE = 50                                 -- Радиус, в котором происходит атака
@@ -411,7 +411,7 @@ end
 							self.last_attack_index = 0
 						end
 						-- Наносим урон выбранному врагу
-						msg.post(enemy_id, "apply_damage", { amount = DAMAGE })
+						msg.post(enemy_id, "damage", { amount = 5000 })
 						print("Attacked enemy:", enemy_id)
 						attacked = true
 					end
@@ -471,10 +471,10 @@ end
 	-- Обработка сообщений столкновений и триггеров
 	function on_message(self, message_id, message, sender)
 		-- Сообщение о столкновении с врагом
-		if message_id == COLLISION_RESPONSE and message.own_group == hash("player") and message.group == ENEMIES then
+		if message_id == COLLISION_RESPONSE and message.own_group == hash("player") and message.group == ENEMY then
 			print("Player collided with enemy: ID=" .. tostring(sender))
 			-- Сообщение о входе или выходе врага из триггерной зоны
-		elseif message_id == TRIGGER_RESPONSE and message.group == ENEMIES then
+		elseif message_id == TRIGGER_RESPONSE and message.group == ENEMY then
 			if message.enter then
 				add_enemy(self, message.other_id)
 				print("Enemy entered range: ID=" .. tostring(message.other_id))

@@ -18,7 +18,7 @@ scale_mode = stretch
 
 [project]
 title = Viking
-custom_resources = /assets/data/player_stats.json
+custom_resources = /assets/data/
 dependencies#0 = https://github.com/defold/extension-spine/archive/refs/tags/3.10.0.zip
 
 [graphics]
@@ -28,4 +28,7 @@ opengl_version_hint = 0
 [physics]
 use_fixed_timestep = 0
 debug = 0
+
+[sprite]
+max_count = 128
 

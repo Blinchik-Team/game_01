@@ -1,6 +1,6 @@
 components {
   id: "enemy"
-  component: "/game/player/enemy/enemy.script"
+  component: "/game/enemy/enemy.script"
 }
 embedded_components {
   id: "co"
@@ -35,7 +35,7 @@ embedded_components {
 embedded_components {
   id: "spinemodel"
   type: "spinemodel"
-  data: "spine_scene: \"/game/player/enemy/enemy.spinescene\"\n"
+  data: "spine_scene: \"/game/enemy/enemy.spinescene\"\n"
   "default_animation: \"idle\"\n"
   "skin: \"\"\n"
   "material: \"/defold-spine/assets/spine.material\"\n"

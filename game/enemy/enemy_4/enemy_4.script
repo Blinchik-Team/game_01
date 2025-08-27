@@ -1,0 +1,61 @@
+-- local EnemyInfo = require("game.enemy.enemy_info")
+-- 
+-- 
+-- local function print_properties(self)
+-- 	local properties = {
+-- 		"id",
+-- 		"health",
+-- 		"hpMultiplierPerWave",
+-- 		"speed",
+-- 		"speedMultiplierPerWave",
+-- 		"meleeDamage",
+-- 		"rangedDamage",
+-- 		"damageMultiplierPerWave",
+-- 		"goldDropAmount",
+-- 		"beerDropChancePercent",
+-- 		"chestDropChancePercent",
+-- 		"alive"
+-- 	}
+-- 
+-- 	print("----- Enemy properties -----")
+-- 	for _, prop in ipairs(properties) do
+-- 		print(prop, self[prop])
+-- 	end
+-- 	print("----------------------------")
+-- end
+-- 
+-- -- go.property("id", 0)
+-- -- go.property("health", 10)
+-- -- go.property("hpMultiplierPerWave", 1.0)
+-- -- go.property("speed", 0)
+-- -- go.property("speedMultiplierPerWave", 1.0)
+-- -- go.property("meleeDamage", 0)
+-- -- go.property("rangedDamage", 0)
+-- -- go.property("damageMultiplierPerWave", 1.0)
+-- -- go.property("goldDropAmount", 0)
+-- -- go.property("beerDropChancePercent", 0)
+-- -- go.property("chestDropChancePercent", 0)
+-- 
+-- function init(self)
+-- 	self.id = self.id or 0
+-- 	local data = EnemyInfo[self.id]
+-- 	if data then
+-- 		-- Используйте свойства из factory.create, если переданы, иначе из модуля
+-- 		self.health = self.health ~= 10 and self.health or data.health
+-- 		self.hpMultiplierPerWave = self.hpMultiplierPerWave ~= 1 and self.hpMultiplierPerWave or data.hpMultiplierPerWave
+-- 		self.speed = self.speed ~= 0 and self.speed or data.speed
+-- 		self.speedMultiplierPerWave = self.speedMultiplierPerWave ~= 1 and self.speedMultiplierPerWave or data.speedMultiplierPerWave
+-- 		self.meleeDamage = self.meleeDamage ~= 0 and self.meleeDamage or data.meleeDamage
+-- 		self.rangedDamage = self.rangedDamage ~= 0 and self.rangedDamage or data.rangedDamage
+-- 		self.damageMultiplierPerWave = self.damageMultiplierPerWave ~= 1 and self.damageMultiplierPerWave or data.damageMultiplierPerWave
+-- 		self.goldDropAmount = self.goldDropAmount ~= 0 and self.goldDropAmount or data.goldDropAmount
+-- 		self.beerDropChancePercent = self.beerDropChancePercent ~= 0 and self.beerDropChancePercent or data.beerDropChancePercent
+-- 		self.chestDropChancePercent = self.chestDropChancePercent ~= 0 and self.chestDropChancePercent or data.chestDropChancePercent
+-- 
+-- 		self.alive = true
+-- 	else
+-- 		pprint("Enemy data not found for id:", self.id)
+-- 	end
+-- 	print_properties(self)
+-- end
+-- 

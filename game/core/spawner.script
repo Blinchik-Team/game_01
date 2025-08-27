@@ -1,0 +1,121 @@
+local function random_position()
+	return vmath.vector3(math.random(64, 1156 - 128), math.random(64, 640 - 128), 0)
+end
+
+local function get_spawn_position()
+	return random_position()
+end
+
+local function spawn_enemy(self, position, enemy_id)
+	if self.current_enemies >= self.max_enemies then
+		-- Достигнут лимит, не спавним новых мобов
+		return nil
+	end
+
+	local factory_id = self.factory_map[enemy_id]
+	if not factory_id then
+		print("Unknown enemy id: " .. tostring(enemy_id))
+		return nil
+	end
+	local enemy_stats = self.enemies_stats[enemy_id]
+	if not enemy_stats then
+		print("Stats not found for enemy id: " .. tostring(enemy_id))
+		return nil
+	end
+
+	local props = {
+		health = enemy_stats.health,
+		speed = enemy_stats.speed,
+		-- добавьте прочие нужные параметры здесь
+	}
+
+	local created_id = factory.create(factory_id, position, nil, props)
+	if created_id then
+		self.current_enemies = self.current_enemies + 1
+		-- print("Текущее количество enemies: " .. self.current_enemies)
+	end
+	return created_id
+end
+
+function init(self)
+	local file_path = "/assets/data/enemies_stats.json"
+	local content, err = sys.load_resource(file_path)
+	if not content then
+		print("Ошибка загрузки файла: " .. tostring(err))
+		return
+	end
+
+	local success, data = pcall(json.decode, content)
+	if not success then
+		print("Ошибка декодирования JSON: " .. tostring(data))
+		return
+	end
+
+	self.enemies_stats = {}
+	for _, enemy in ipairs(data) do
+		self.enemies_stats[enemy.id] = enemy
+	end
+
+	self.factory_map = {
+		[0] = "#mushroom_factory",
+		[1] = "#brave_dwarf_factory",
+		[2] = "#scared_dwarf_factory",
+		[3] = "#elf_archer_factory",
+		[4] = "#dwarf_brawler_factory",
+		[5] = "#satyr_factory",
+		[6] = "#trell_factory",
+		[7] = "#witch_factory",
+		[8] = "#raven_factory",
+		[9] = "#dwarf_keeper_factory",
+		[10] = "#troll_factory",
+		[11] = "#devil_factory",
+		[12] = "#worried_volhv_factory",
+		[13] = "#nisse_factory",
+		[14] = "#varang_factory",
+		[15] = "#raider_factory",
+		[16] = "#shadow_ritual_factory",
+		[17] = "#harm_factory",
+		[18] = "#stone_giant_factory",
+		[19] = "#jarl_factory",
+	}
+
+	-- Новые параметры спавна
+	self.max_enemies = 10        -- Максимальное количество мобов на сцене (Ориентировочно 50)
+	self.spawn_rate = 10         -- Скорость спавна (мобов в секунду)
+	self.current_enemies = 0     -- Текущие живые мобы
+	self.spawn_timer = 0         -- Таймер для накопления времени спавна
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("spawn_enemy_request") then
+		spawn_enemy(self, message.position, message.enemy_id)
+	end
+end
+
+
+function update(self, dt)
+	-- Спавним мобов с учетом ограничения и скорости
+	self.spawn_timer = self.spawn_timer + dt
+	local mobs_to_spawn = math.floor(self.spawn_timer * self.spawn_rate)
+	if mobs_to_spawn > 0 then
+		for i = 1, mobs_to_spawn do
+			if self.current_enemies >= self.max_enemies then
+				break
+			end
+			-- Здесь нужно реализовать логику получения позиции для спавна
+			local spawn_position = get_spawn_position()
+			-- Можно рандомно выбирать enemy_id или по вашей логике
+			local enemy_id = math.random(0, 0)
+			spawn_enemy(self, spawn_position, enemy_id)
+			
+		end
+		self.spawn_timer = self.spawn_timer - mobs_to_spawn / self.spawn_rate
+	end
+end
+
+-- function on_message(self, message_id, message, sender)
+-- 	if message_id == hash("spawn_enemy_request") then
+-- 		local created_enemy_id = spawn_enemy(self, message.position, message.enemy_id)
+-- 		msg.post("/arena#game", "enemy_created", { created_enemy_id = created_enemy_id} )
+-- 	end
+-- end
