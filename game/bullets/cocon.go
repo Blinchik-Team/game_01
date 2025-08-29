@@ -1,11 +1,11 @@
 components {
-  id: "bullet"
-  component: "/game/bullets/bullet.script"
+  id: "cocon"
+  component: "/game/bullets/cocon.script"
 }
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"green\"\n"
+  data: "default_animation: \"yellow\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -37,8 +37,8 @@ embedded_components {
   "    index: 0\n"
   "    count: 3\n"
   "  }\n"
-  "  data: 0.113658\n"
-  "  data: 0.1190605\n"
+  "  data: 5.8322716\n"
+  "  data: 6.214213\n"
   "  data: 10.0\n"
   "}\n"
   ""

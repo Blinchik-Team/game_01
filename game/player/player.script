@@ -237,7 +237,11 @@ end
 			self.current_animation = "idle"
 		end
 	end
-
+	
+	local function spine_callback(self, node, event, data)
+		print("Spine event:", event, data.name)
+	end
+	
 	-- Функция инициализации
 	function init(self)
 		math.randomseed(os.time())

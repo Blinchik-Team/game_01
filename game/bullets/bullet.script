@@ -1,37 +1,66 @@
-go.property("speed", 300) -- Скорость пули
-go.property("dir", vmath.vector3(0, 0, 0)) -- Направление пули (по умолчанию 0, 0, 0)
+-- go.property("speed", 300) -- Скорость пули
+-- go.property("dir", vmath.vector3(0, 0, 0)) -- Направление пули (по умолчанию 0, 0, 0)
+-- 
+-- -- Инициализация пули
+-- function init(self)
+-- 	print("Bullet initialized: Position=" .. tostring(go.get_position()) .. ", Direction=" .. tostring(self.dir))
+-- 	if vmath.length(self.dir) < 0.1 then
+-- 		--print("Warning: Bullet direction is near zero, setting default direction")
+-- 		self.dir = vmath.vector3(0, 1, 0) -- Устанавливаем направление по умолчанию (вверх)
+-- 	end
+-- 	self.life_time = 1.0  -- время жизни пули в секундах
+-- 	self.timer = 0
+-- end
+-- 
+-- -- Обновление позиции пули
+-- function update(self, dt)
+-- 	local pos = go.get_position()
+-- 	pos = pos + self.dir * self.speed * dt
+-- 	go.set_position(pos)
+-- 	--print("Bullet moved: Position=" .. tostring(pos) .. ", Direction=" .. tostring(self.dir))
+-- 
+-- 	self.timer = self.timer + dt
+-- 	if self.timer >= self.life_time then
+-- 		go.delete()
+-- 	end
+-- end
+-- 
+-- -- Обработка столкновений
+-- function on_message(self, message_id, message, sender)
+-- 	if message_id == hash("collision_response") and message.group == hash("enemies") then
+-- 		go.delete()
+-- 		--print("Bullet hit enemy: ID=" .. tostring(sender))
+-- 	end
+-- 	if message_id == hash("contact_point_response") then
+-- 		go.set_position(go.get_position() + message.normal * message.distance)
+-- 	end	
+-- end
+local move_speed = 300       -- скорость полета стрелы (можно менять)
+local life_time = 3          -- время жизни стрелы в секундах
 
--- Инициализация пули
 function init(self)
-	print("Bullet initialized: Position=" .. tostring(go.get_position()) .. ", Direction=" .. tostring(self.dir))
-	if vmath.length(self.dir) < 0.1 then
-		--print("Warning: Bullet direction is near zero, setting default direction")
-		self.dir = vmath.vector3(0, 1, 0) -- Устанавливаем направление по умолчанию (вверх)
-	end
-	self.life_time = 1.0  -- время жизни пули в секундах
-	self.timer = 0
+	self.direction = vmath.vector3(0, 1, 0)  -- по умолчанию вверх, потом установится верно
+	self.life_timer = life_time
 end
 
--- Обновление позиции пули
 function update(self, dt)
+	-- Движение стрелы в направлении с заданной скоростью
 	local pos = go.get_position()
-	pos = pos + self.dir * self.speed * dt
+	pos = pos + self.direction * move_speed * dt
 	go.set_position(pos)
-	--print("Bullet moved: Position=" .. tostring(pos) .. ", Direction=" .. tostring(self.dir))
 
-	self.timer = self.timer + dt
-	if self.timer >= self.life_time then
+	-- Таймер жизни
+	self.life_timer = self.life_timer - dt
+	if self.life_timer <= 0 then
 		go.delete()
 	end
 end
 
--- Обработка столкновений
 function on_message(self, message_id, message, sender)
-	if message_id == hash("collision_response") and message.group == hash("enemies") then
-		go.delete()
-		--print("Bullet hit enemy: ID=" .. tostring(sender))
+	if message_id == hash("set_direction") then
+		self.direction = message.direction
+		local angle = math.atan2(self.direction.y, self.direction.x)
+		local quat = vmath.quat_rotation_z(angle)
+		go.set_rotation(quat)
 	end
-	if message_id == hash("contact_point_response") then
-		go.set_position(go.get_position() + message.normal * message.distance)
-	end	
 end
