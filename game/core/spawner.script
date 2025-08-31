@@ -123,7 +123,7 @@ function update(self, dt)
 			-- Здесь нужно реализовать логику получения позиции для спавна
 			local spawn_position = get_spawn_position()
 			-- Можно рандомно выбирать enemy_id или по вашей логике
-			local enemy_id = math.random(0, 5)
+			local enemy_id = math.random(8, 8)
 			spawn_enemy(self, spawn_position, enemy_id)
 			
 		end

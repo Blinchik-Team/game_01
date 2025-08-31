@@ -1,0 +1,27 @@
+local move_speed = 200
+local life_time = 3
+
+function init(self)
+	self.direction = vmath.vector3(0, 1, 0) -- по умолчанию вверх
+	self.life_timer = life_time
+end
+
+function update(self, dt)
+	local pos = go.get_position()
+	pos = pos + self.direction * move_speed * dt
+	go.set_position(pos)
+
+	self.life_timer = self.life_timer - dt
+	if self.life_timer <= 0 then
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("set_direction") then
+		self.direction = message.direction
+		local angle = math.atan2(self.direction.y, self.direction.x)
+		local quat = vmath.quat_rotation_z(angle)
+		go.set_rotation(quat)
+	end
+end

@@ -1,6 +1,6 @@
 components {
-  id: "enemy_10"
-  component: "/game/enemy/enemy_10/enemy_10.script"
+  id: "enemy_8"
+  component: "/game/enemy/enemy_8/enemy_8.script"
 }
 embedded_components {
   id: "spinemodel"
@@ -9,5 +9,37 @@ embedded_components {
   "default_animation: \"idle\"\n"
   "skin: \"enemy_8\"\n"
   "material: \"/defold-spine/assets/spine.material\"\n"
+  ""
+}
+embedded_components {
+  id: "co"
+  type: "collisionobject"
+  data: "type: COLLISION_OBJECT_TYPE_TRIGGER\n"
+  "mass: 0.0\n"
+  "friction: 0.1\n"
+  "restitution: 0.5\n"
+  "group: \"enemy\"\n"
+  "mask: \"player\"\n"
+  "embedded_collision_shape {\n"
+  "  shapes {\n"
+  "    shape_type: TYPE_BOX\n"
+  "    position {\n"
+  "      y: 33.0\n"
+  "    }\n"
+  "    rotation {\n"
+  "    }\n"
+  "    index: 0\n"
+  "    count: 3\n"
+  "  }\n"
+  "  data: 18.465025\n"
+  "  data: 17.485952\n"
+  "  data: 10.8\n"
+  "}\n"
+  ""
+}
+embedded_components {
+  id: "ballfactory"
+  type: "factory"
+  data: "prototype: \"/game/bullets/ball.go\"\n"
   ""
 }
