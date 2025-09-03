@@ -15,10 +15,12 @@ local function die(self)
 -- 	end
 	-- -- Гарантированное исцеление игрока (отправляем сообщение, например)
 	-- msg.post("main:/player#script", "heal", {amount = 20}) -- пример
+	if self.player_id then
+		msg.post(self.player_id, "heal", { amount = 5 }) -- здесь 5 — количество восстанавливаемого HP
+	end
 	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, function () 
 		go.delete() -- удаляем объект врага
 	end)
-	
 end
 
 function init(self)
