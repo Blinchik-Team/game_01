@@ -21,6 +21,13 @@ local active_skins = {
 	weapon_back = "weapons/axe_1_back",
 	weapon_front = "weapons/axe_1_front",
 }
+
+local function die(self)
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
+		go.delete()
+	end)
+end
+
 local function apply_skins(self)
 	spine.clear_skin(self.spinemodel, active_skins.base)
 	spine.add_skin(self.spinemodel, active_skins.base, active_skins.head)
@@ -63,36 +70,18 @@ local weapon_attack_animations = {
 }
 
 local function update_animation(self)
-	if self.moving then
-		spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD, { track = 1 } )
-		local scale_x = self.facing_left and -1 or 1
-		go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
-		self.current_animation = self.facing_left and "left" or "right"
-	else
-		if self.current_animation ~= "idle" then
-			spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 } )
-			self.current_animation = "idle"
-		end
+	local desired_anim = self.moving and "run" or "idle"
+	if self.current_animation ~= desired_anim then
+		spine.play_anim("#spinemodel", desired_anim, go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+		self.current_animation = desired_anim
+	end
+
+	local desired_scale_x = self.facing_left and -1 or 1
+	if self.current_scale_x ~= desired_scale_x then
+		go.set(go.get_id(), "scale", vmath.vector3(desired_scale_x, 1, 1))
+		self.current_scale_x = desired_scale_x
 	end
 end
-
--- local function update_animation(self)
--- 	if self.moving then
--- 		if self.current_animation ~= "run" then
--- 			spine.play_anim("#spinemodel", "run", go.PLAYBACK_LOOP_FORWARD)
--- 			self.current_animation = "run"
--- 			local scale_x = self.facing_left and -1 or 1
--- 			go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
--- 		end
--- 	else
--- 		if self.current_animation ~= "idle" then
--- 			spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
--- 			self.current_animation = "idle"
--- 			local scale_x = self.facing_left and -1 or 1
--- 			go.set(go.get_id(), "scale", vmath.vector3(scale_x, 1, 1))
--- 		end
--- 	end
--- end
 
 local function spine_callback(self, node, event, data)
 	print("Spine event:", event, data.name)
@@ -133,10 +122,13 @@ function init(self)
 	msg.post("/arena#game", "player_stats", { player_stats = self.stats })
 	msg.post(".", "acquire_input_focus")
 	self.moving = false
-	self.input = vmath.vector3()
+	self.input = vmath.vector3(0, 0, 0)
 	self.dir = vmath.vector3(0, 1, 0)
 	self.speed = 300
 	self.current_animation = "idle"
+	self.current_scale_x = 1
+	self.facing_left = false
+	self.attacking = false
 	spine.play_anim("#spinemodel", "idle", go.PLAYBACK_LOOP_FORWARD)
 	self.enemies_in_range = {}
 	self.enemies_list = {}
@@ -153,6 +145,9 @@ function init(self)
 	self.cloak = false
 	self.spinemodel = msg.url(nil, go.get_id(), "spinemodel")
 	apply_skins(self)
+	self.stats = self.stats or {}
+	self.hpMax = self.stats.hpMax or 100  -- начальное HP
+	self.hpCurrent = self.stats.hpMax or 100  -- начальное HP
 end
 
 local function add_enemy(self, enemy_id)
@@ -195,51 +190,56 @@ local function find_closest_enemy(self)
 end
 
 function update(self, dt)
-	
 	self.fire_cooldown = math.max(0, self.fire_cooldown - dt)
 
 	local player_pos = go.get_position()
 	local closest_enemy, dist = find_closest_enemy(self)
+
+	-- Обновляем направление взгляда
 	if closest_enemy then
 		local enemy_pos = go.get_position(closest_enemy)
-		-- Определяем направление взгляда в сторону врага по оси X (без изменения движения)
-		if enemy_pos.x < player_pos.x then
-			self.facing_left = true
-		else
-			self.facing_left = false
+		local face_left = enemy_pos.x < player_pos.x
+		if self.attacking or not self.moving or self.input.x == 0 then
+			self.facing_left = face_left
 		end
 	end
 
+	-- Учитываем направление движения игрока, если он движется и не атакует
+	if self.moving and self.input.x ~= 0 and not self.attacking then
+		self.facing_left = self.input.x < 0
+	end
+
+	-- Обновляем позицию игрока
 	if self.moving then
 		local pos = go.get_position()
 		pos = pos + self.dir * self.speed * dt
 		go.set_position(pos)
 	end
 
-	update_animation(self)
-
-	self.input.x = 0
-	self.input.y = 0
-	self.moving = false
-
+	-- Обработка атаки
 	if self.fire_cooldown <= 0 and #self.enemies_list > 0 then
 		local attacked = false
 		local attempts = 0
+		local amount_damage = 0
 		local max_attempts = #self.enemies_list
 		while not attacked and attempts < max_attempts do
 			local enemy_id = self.enemies_list[self.current_enemy_index]
 			if go.exists(enemy_id) then
-				-- Анимация атаки поочередно
+				local anim
 				if self.last_attack_index == 0 then
-					spine.play_anim("#spinemodel", "attack_mili_slash_front", go.PLAYBACK_ONCE_FORWARD, { track = 2 })
-					go.set(self.url_spinemodel, "playback_rate", 2)
+					anim = "attack_mili_slash_front"
 					self.last_attack_index = 1
+					amount_damage = weapon_stats.axe_1.damage
 				else
-					spine.play_anim("#spinemodel", "attack_mili_slash_back", go.PLAYBACK_ONCE_FORWARD, { track = 2 })
-					go.set(self.url_spinemodel, "playback_rate", 2)
+					anim = "attack_mili_slash_back"
 					self.last_attack_index = 0
+					amount_damage = weapon_stats.axe_1.damage
 				end
-				msg.post(enemy_id, "damage", { amount = 5000 })
+				self.attacking = true
+				spine.play_anim("#spinemodel", anim, go.PLAYBACK_ONCE_FORWARD, { track = 2, playback_rate = 2 }, function()
+					self.attacking = false
+				end)
+				msg.post(enemy_id, "damage", { amount = amount_damage})
 				print("Attacked enemy:", enemy_id)
 				attacked = true
 			else
@@ -255,22 +255,37 @@ function update(self, dt)
 			self.fire_cooldown = self.fire_interval
 		end
 	end
+
+	update_animation(self)
+	msg.post("/view#arena", "update_hp", { hp = self.hpCurrent })
 end
 
 function on_input(self, action_id, action)
+	-- Debug input
+	print("Input received:", tostring(action_id), "value:", action.value, "pressed:", action.pressed, "released:", action.released)
+
+	-- Update input based on action value (1 for held, 0 for released)
 	if action_id == hash("up") then
-		self.input.y = 1
+		self.input.y = action.value or 0
 	elseif action_id == hash("down") then
-		self.input.y = -1
+		self.input.y = action.value == 1 and -1 or 0
 	elseif action_id == hash("left") then
-		self.input.x = -1
+		self.input.x = action.value == 1 and -1 or 0
 	elseif action_id == hash("right") then
-		self.input.x = 1
+		self.input.x = action.value or 0
 	end
+
+	-- Update movement state
 	if vmath.length(self.input) > 0 then
 		self.moving = true
 		self.dir = vmath.normalize(self.input)
+		print("Moving: true, Direction:", self.dir.x, self.dir.y)
+	else
+		self.moving = false
+		print("Moving: false")
 	end
+
+	-- Handle item actions on release
 	if action.released then
 		if action_id == hash("item1") then
 			active_skins.armor = "armor_1"
@@ -309,5 +324,15 @@ function on_message(self, message_id, message, sender)
 	end
 	if message_id == hash("request_player_stats") then
 		msg.post(sender, "get_player_stats", { player_stats = self.stats })
+	end
+	if message_id == hash("damage") then
+		self.hpCurrent = self.hpCurrent - message.amount
+		if self.hpCurrent <= 0 then
+			die(self)
+		end
+	end
+	if message_id == hash("heal") then
+		self.hpCurrent = math.min(self.hpMax, self.hpCurrent + message.amount)
+		msg.post("/view#arena", "update_hp", { hp = self.hpCurrent })
 	end
 end

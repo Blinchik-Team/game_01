@@ -1,3 +1,4 @@
+
 local function spawn_player(self, position)
 	if self.player_id then return end
 	self.player_id = factory.create("#player_factory", position)
@@ -88,6 +89,7 @@ function init(self)
 		[17] = "#harm_factory",
 		[18] = "#stone_giant_factory",
 		[19] = "#jarl_factory",
+		[21] = "#boss_factory"
 	}
 
 	-- Новые параметры спавна
@@ -108,6 +110,7 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("response_enemy_id") then
 		msg.post(message.enemy_url, "player_id", { player_id = self.player_id })
 	end
+	
 end
 
 
@@ -123,7 +126,7 @@ function update(self, dt)
 			-- Здесь нужно реализовать логику получения позиции для спавна
 			local spawn_position = get_spawn_position()
 			-- Можно рандомно выбирать enemy_id или по вашей логике
-			local enemy_id = math.random(8, 8)
+			local enemy_id =  math.random(4, 4) 
 			spawn_enemy(self, spawn_position, enemy_id)
 			
 		end

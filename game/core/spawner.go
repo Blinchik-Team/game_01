@@ -110,3 +110,9 @@ embedded_components {
   data: "prototype: \"/game/player/player.go\"\n"
   ""
 }
+embedded_components {
+  id: "boss_factory"
+  type: "factory"
+  data: "prototype: \"/game/enemy/enemy_21/enemy_21.go\"\n"
+  ""
+}

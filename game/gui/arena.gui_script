@@ -3,6 +3,10 @@ function init(self)
 	self.wave_timer = gui.get_node("wave")
 	self.current_wave = 1
 	msg.post("/view#arena", "enable")
+
+
+	self.hp_label_node = gui.get_node("label/hp")
+	-- self.hpCurrent = 
 end
 
 function final(self)
@@ -12,9 +16,7 @@ function final(self)
 end
 
 function update(self, dt)
-	-- Add update code here
-	-- Learn more: https://defold.com/manuals/script/
-	-- Remove this function if not needed
+	gui.set_text(self.hp_label_node, tostring(self.hpCurrent))
 end
 
 function on_message(self, message_id, message, sender)
@@ -25,6 +27,10 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("update_timer") then
 		self.current_wave = message.current_wave
 		gui.set_text(self.timer_text_node, "Wave " .. self.current_wave .. " \n  " ..  tostring(message.time))
+	end
+	if message_id == hash("update_hp") then
+		self.hpCurrent = message.hp
+		-- gui.set_text(self.hp_label_node, tostring(message.hp))
 	end
 end
 

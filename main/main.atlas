@@ -31,4 +31,7 @@ images {
 images {
   image: "/assets/png/resume.png"
 }
+images {
+  image: "/assets/png/viking_bg.jpg"
+}
 extrude_borders: 2
