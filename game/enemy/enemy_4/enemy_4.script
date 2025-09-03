@@ -1,5 +1,9 @@
 local EnemyInfo = require "game.enemy.enemy_info"
 
+local DAMAGE_DISTANCE_THRESHOLD = 20
+local DAMAGE_AMOUNT = 10
+local DAMAGE_COOLDOWN = 1 -- в секундах, чтобы не наносить урон на каждом кадре
+
 local function die(self)
 	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
 		go.delete()
@@ -7,30 +11,35 @@ local function die(self)
 end
 
 function init(self)
+	self.damage_cooldown_timer = 0
 	self.player_id = self.player_id
 	self.enemy_id = self.enemy_id or 1 -- Цверг-задира (укажите правильный id)
 	self.wave_number = self.wave_number or 1
-
 	local data = EnemyInfo[self.enemy_id]
 	self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
 	self.current_hp = self.max_hp
-
 	self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number)
 	self.tackle_speed = self.speed * 2 -- скорость тарана в 2 раза больше обычной
-
 	self.is_moving = false
 	self.is_tackling = false
 	self.tackle_duration = 2 -- длительность тарана в секундах
 	self.tackle_cooldown = math.random(2, 3) -- время между таранными атаками
-
 	self.tackle_timer = 0
 	self.cooldown_timer = self.tackle_cooldown
-
 	self.tackle_direction = vmath.vector3()
-
 	self.url_spinemodel = "#spinemodel"
-
 	spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+end
+
+local function try_deal_damage(self, player_pos, enemy_pos)
+	if self.damage_cooldown_timer > 0 then
+		return
+	end
+	local distance = vmath.length(player_pos - enemy_pos)
+	if distance < DAMAGE_DISTANCE_THRESHOLD then
+		msg.post(self.player_id, "damage", { amount = DAMAGE_AMOUNT })
+		self.damage_cooldown_timer = DAMAGE_COOLDOWN
+	end
 end
 
 function update(self, dt)
@@ -38,34 +47,35 @@ function update(self, dt)
 		print("No player_id")
 		return
 	end
-
 	local player_pos = go.get_position(self.player_id)
 	local enemy_pos = go.get_position()
 
+	-- Уменьшаем таймер кулдауна урона
+	if self.damage_cooldown_timer > 0 then
+		self.damage_cooldown_timer = self.damage_cooldown_timer - dt
+	end
+
 	if self.is_tackling then
-		-- Таран: бежим в сохранённом направлении с повышенной скоростью
 		local new_pos = enemy_pos + self.tackle_direction * self.tackle_speed * dt
 		go.set_position(new_pos)
-
 		self.tackle_timer = self.tackle_timer - dt
+		try_deal_damage(self, player_pos, new_pos)
 		if self.tackle_timer <= 0 then
 			self.is_tackling = false
 			self.cooldown_timer = math.random(2, 3)
 			spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD)
 		end
 	else
-		-- Преследование игрока
 		local direction = player_pos - enemy_pos
 		local distance = vmath.length(direction)
 		if distance > 0 then
 			direction = vmath.normalize(direction)
 			local new_pos = enemy_pos + direction * self.speed * dt
 			go.set_position(new_pos)
+			try_deal_damage(self, player_pos, new_pos)
 		end
-
 		self.cooldown_timer = self.cooldown_timer - dt
 		if self.cooldown_timer <= 0 then
-			-- Запуск тарана
 			self.is_tackling = true
 			self.tackle_timer = self.tackle_duration
 			self.tackle_direction = vmath.normalize(player_pos - enemy_pos)
@@ -78,7 +88,6 @@ function update(self, dt)
 		end
 	end
 
-	-- Отражение spine-модели по оси X в сторону движения
 	local scale = go.get_scale()
 	local facing_dir = self.is_tackling and self.tackle_direction or (player_pos - go.get_position())
 	if facing_dir.x < 0 then
