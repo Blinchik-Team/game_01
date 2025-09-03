@@ -1,0 +1,207 @@
+local EnemyInfo = require "game.enemy.enemy_info"
+
+local PHASES = {
+	CLAWS = 1,
+	SUMMON_WOLVES = 2,
+	RAGE = 3
+}
+
+local function die(self)
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
+		go.delete()
+	end)
+end
+
+-- Рывок в сторону игрока
+local function dash_towards_player(self)
+	local enemy_pos = go.get_position()
+	local player_pos = go.get_position(self.player_id)
+	local direction = vmath.normalize(player_pos - enemy_pos)
+	local dash_distance = 100 -- расстояние рывка
+	local dash_speed = 600 -- скорость рывка
+
+	-- Рассчитать целевую позицию рывка
+	local target_pos = enemy_pos + direction * dash_distance
+
+	-- -- Запустить анимацию рывка
+	-- spine.play_anim(self.url_spinemodel, "dash", go.PLAYBACK_ONCE_FORWARD)
+
+	-- Линейное перемещение к target_pos с высокой скоростью (упрощенно)
+	go.animate(go.get_id(), "position", go.PLAYBACK_ONCE_FORWARD, target_pos, go.EASING_LINEAR, dash_distance / dash_speed)
+end
+
+-- АОЕ-скилл: наносит урон всем врагам в радиусе рядом с боссом
+local function aoe_skill(self)
+-- 	local boss_pos = go.get_position()
+-- 	local aoe_radius = 80
+-- 
+-- 	-- Запуск анимации АОЕ
+-- 	spine.play_anim(self.url_spinemodel, "aoe", go.PLAYBACK_ONCE_FORWARD)
+-- 
+-- 	-- Сообщение игровому менеджеру, чтобы тот нанес урон врагам в радиусе
+-- 	msg.post("game_manager", "boss_aoe_attack", { position = boss_pos, radius = aoe_radius })
+end
+
+-- Призыв нескольких врагов вокруг босса
+local function spawn_minions(self)
+-- 	local boss_pos = go.get_position()
+-- 	local minion_count = 3
+-- 	local spawn_radius = 50
+-- 
+-- 	for i = 1, minion_count do
+-- 		local angle = (2 * math.pi / minion_count) * i
+-- 		local spawn_pos = boss_pos + vmath.vector3(math.cos(angle) * spawn_radius, math.sin(angle) * spawn_radius, 0)
+-- 
+-- 		-- Отправляем сообщение игровой системе для создания миньона
+-- 		msg.post("game_manager", "spawn_enemy", { enemy_id = 2, position = spawn_pos }) -- enemy_id=2 - тип миньона
+-- 	end
+end
+
+function init(self)
+	local max_offset = 30
+	self.target_offset = vmath.vector3(
+	(math.random() - 0.5) * 2 * max_offset,
+	(math.random() - 0.5) * 2 * max_offset,
+	0
+)
+self.move_time = 0
+self.phase = PHASES.CLAWS
+self.phase_timer = 0
+self.action_cooldown = 0
+
+self.url_spinemodel = "#spinemodel"
+self.player_id = self.player_id
+self.enemy_id = self.enemy_id or 1
+self.wave_number = self.wave_number or 1
+local data = EnemyInfo[self.enemy_id]
+
+self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
+self.current_hp = self.max_hp
+
+local speed_variation = 0.2
+local random_factor = 1 + (math.random() * 2 - 1) * speed_variation
+
+self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number) * random_factor
+self.melee_damage = data.meleeDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+self.ranged_damage = data.rangedDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+self.gold_drop_amount = data.goldDropAmount
+self.beer_drop_chance_percent = data.beerDropChancePercent
+self.chest_drop_chance_percent = data.chestDropChancePercent
+self.name = data.name
+self.behavior = data.behavior
+self.special_action = data.specialAction
+
+spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+self.is_moving = false
+end
+
+function update(self, dt)
+if not self.player_id then
+	print("No player_id")
+	return
+end
+
+self.move_time = self.move_time + dt
+self.phase_timer = self.phase_timer + dt
+self.action_cooldown = math.max(0, self.action_cooldown - dt)
+
+local player_pos = go.get_position(self.player_id)
+local enemy_pos = go.get_position()
+
+local max_offset = 30
+if not self.target_offset then
+	self.target_offset = vmath.vector3(
+	(math.random() - 0.5) * 2 * max_offset,
+	(math.random() - 0.5) * 2 * max_offset,
+	0
+)
+end
+
+local adjusted_target = player_pos + self.target_offset
+local direction = adjusted_target - enemy_pos
+local length = vmath.length(direction)
+
+if self.phase == PHASES.CLAWS then
+if self.phase_timer > 10 then
+	self.phase = PHASES.SUMMON_WOLVES
+	self.phase_timer = 0
+else
+	if length > 0 and self.speed > 0 then
+		direction = vmath.normalize(direction)
+		local offset_x = math.sin(self.move_time * 5) * 3
+		local offset_y = math.cos(self.move_time * 5) * 3
+		local new_pos = enemy_pos + direction * self.speed * dt + vmath.vector3(offset_x * dt, offset_y * dt, 0)
+		go.set_position(new_pos)
+
+		local scale = go.get_scale()
+		scale.x = (direction.x < 0) and -math.abs(scale.x) or math.abs(scale.x)
+		go.set(go.get_id(), "scale", scale)
+
+		if not self.is_moving then
+			spine.play_anim(self.url_spinemodel, "run", go.PLAYBACK_LOOP_FORWARD)
+			self.is_moving = true
+		end
+	end
+
+	-- Рывок по кулдауну
+	if self.action_cooldown == 0 then
+		dash_towards_player(self)
+		self.action_cooldown = 5 -- рывок раз в 5 секунд
+	end
+end
+
+elseif self.phase == PHASES.SUMMON_WOLVES then
+if self.phase_timer > 5 then
+	self.phase = PHASES.RAGE
+	self.phase_timer = 0
+else
+	if self.phase_timer < dt * 2 then
+		spawn_minions(self)
+		aoe_skill(self)  -- АоЕ при призыве
+	end
+	if self.is_moving then
+		spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD)
+		self.is_moving = false
+	end
+end
+
+elseif self.phase == PHASES.RAGE then
+-- Поведение бешенства с АОЕ и частыми рывками
+if self.action_cooldown == 0 then
+	aoe_skill(self)
+	dash_towards_player(self)
+	self.action_cooldown = 3 -- АОЕ и рывок раз в 3 секунды
+end
+
+if length > 0 and self.speed > 0 then
+	direction = vmath.normalize(direction)
+	local offset_x = math.sin(self.move_time * 15) * 6
+	local offset_y = math.cos(self.move_time * 15) * 6
+	local new_pos = enemy_pos + direction * self.speed * dt + vmath.vector3(offset_x * dt, offset_y * dt, 0)
+	go.set_position(new_pos)
+
+	local scale = go.get_scale()
+	scale.x = (direction.x < 0) and -math.abs(scale.x) or math.abs(scale.x)
+	go.set(go.get_id(), "scale", scale)
+end
+
+if self.phase_timer > 15 then
+	self.phase = PHASES.CLAWS
+	self.phase_timer = 0
+end
+end
+end
+
+function on_message(self, message_id, message, sender)
+if message_id == hash("damage") then
+self.current_hp = self.current_hp - message.amount
+if self.current_hp <= 0 then
+	die(self)
+end
+end
+if message_id == hash("request_player_id") then
+msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+elseif message_id == hash("player_id") then
+self.player_id = message.player_id
+end
+end

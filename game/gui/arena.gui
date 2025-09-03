@@ -41,5 +41,27 @@ nodes {
   parent: "wave"
   inherit_alpha: true
 }
+nodes {
+  position {
+    x: 96.0
+    y: 670.0
+  }
+  type: TYPE_TEMPLATE
+  id: "label"
+  inherit_alpha: true
+  template: "/game/player/label.gui"
+}
+nodes {
+  type: TYPE_BOX
+  id: "label/box"
+  parent: "label"
+  template_node_child: true
+}
+nodes {
+  type: TYPE_TEXT
+  id: "label/hp"
+  parent: "label/box"
+  template_node_child: true
+}
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT

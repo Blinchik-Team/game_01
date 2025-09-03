@@ -1,0 +1,70 @@
+local EnemyInfo = require "game.enemy.enemy_info" -- модуль с таблицей врагов
+
+local function die(self)
+	-- Выпадение золота
+--	factory.create("#gold_factory", go.get_position())
+
+-- 	-- Выпадение пива 100%
+-- 	if math.random(100) <= beer_drop_chance then
+-- 		factory.create("#beer_factory", go.get_position())
+-- 	end
+-- 
+-- 	-- Выпадение сундука с шансом 35%
+-- 	if math.random(100) <= chest_drop_chance then
+-- 		factory.create("#chest_factory", go.get_position())
+-- 	end
+	-- -- Гарантированное исцеление игрока (отправляем сообщение, например)
+	-- msg.post("main:/player#script", "heal", {amount = 20}) -- пример
+	if self.player_id then
+		msg.post(self.player_id, "heal", { amount = 5 }) -- здесь 5 — количество восстанавливаемого HP
+	end
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 2 }, function () 
+		go.delete() -- удаляем объект врага
+	end)
+end
+
+function init(self)
+	-- Получаем id врага и номер волны из параметров, переданных при спавне
+	self.url_spinemodel = "#spinemodel"
+	
+	self.player_id = self.player_id
+	self.enemy_id = self.enemy_id or 0
+	self.wave_number = self.wave_number or 1
+	
+	local data = EnemyInfo[self.enemy_id]
+
+	-- Здоровье с учетом множителя на волну
+	self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
+	self.current_hp = self.max_hp
+
+	-- Скорость с учетом множителя на волну
+	self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number)
+
+	-- Урон
+	self.melee_damage = data.meleeDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+	self.ranged_damage = data.rangedDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+
+	-- Шансы и количество дропа
+	self.gold_drop_amount = data.goldDropAmount
+	self.beer_drop_chance_percent = data.beerDropChancePercent
+	self.chest_drop_chance_percent = data.chestDropChancePercent
+
+	-- Остальные параметры по необходимости
+	self.name = data.name
+	self.behavior = data.behavior
+	self.special_action = data.specialAction
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("damage") then
+		self.current_hp = self.current_hp - message.amount
+		if self.current_hp <= 0 then
+			die(self)
+		end
+	end
+	if message_id == hash("request_player_id") then
+		msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+	elseif message_id == hash("player_id") then
+		self.player_id = message.player_id
+	end
+end

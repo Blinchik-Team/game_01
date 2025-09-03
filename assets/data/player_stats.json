@@ -1,9 +1,10 @@
 {
   "stats": {
-    "hpMax": 1000,
+    "hpMax": 100,
+    "hpCurrent": 10,
     "regeneration": 5,
     "lifeSteal": 15,
-    "damage": 120,
+    "damage": 2,
     "damageMultipliers": {
       "melee": 1.2,
       "ranged": 1.0,
@@ -14,7 +15,7 @@
     "attackSpeed": 20,
     "armor": 50,
     "evasion": 30,
-    "speed": 10,
+    "speed": 300,
     "luck": 5,
     "critical": {
       "critChance": 25,

@@ -1,0 +1,142 @@
+local EnemyInfo = require "game.enemy.enemy_info"
+
+local function die(self)
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
+		go.delete()
+	end)
+end
+
+function init(self)
+	self.current_animation = "idle"
+	
+	local max_offset = 100  -- держимся на расстоянии около 100
+	self.target_offset = vmath.vector3(
+	(math.random() - 0.5) * 2 * max_offset,
+	(math.random() - 0.5) * 2 * max_offset,
+	0
+)
+self.move_time = 0
+self.phase = math.random() * 2 * math.pi
+self.url_spinemodel = "#spinemodel"
+self.player_id = self.player_id
+self.enemy_id = self.enemy_id or 8 -- ID ворона
+self.wave_number = self.wave_number or 1
+
+local data = EnemyInfo[self.enemy_id]
+self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
+self.current_hp = self.max_hp
+
+local speed_variation = 0.2
+local random_factor = 1 + (math.random() * 2 - 1) * speed_variation
+self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number) * random_factor
+
+self.melee_damage = 0  -- урон при касании нет
+self.ranged_damage = data.rangedDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+self.attack_range = 400
+self.attack_interval = 2 -- увеличиваем долгость перезарядки
+self.attack_cooldown = self.attack_interval -- чтобы дождаться перед первым выстрелом
+
+self.gold_drop_amount = data.goldDropAmount
+self.beer_drop_chance_percent = data.beerDropChancePercent
+self.chest_drop_chance_percent = data.chestDropChancePercent
+
+self.name = data.name
+self.behavior = data.behavior
+self.special_action = data.specialAction
+
+spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+self.is_moving = false
+end
+
+function update(self, dt)
+if not self.player_id then
+	print("No player_id")
+	return
+end
+
+self.move_time = self.move_time + dt
+local player_pos = go.get_position(self.player_id)
+local enemy_pos = go.get_position()
+
+-- Рассчитываем точку, в которой враг будет удерживать дистанцию
+local direction_to_player = player_pos - enemy_pos
+local dist_to_player = vmath.length(direction_to_player)
+
+-- Если слишком близко — двигаемся назад, если далеко — двигаемся ближе с колебаниями
+if dist_to_player < self.attack_range * 0.8 then
+	-- отдаляемся от игрока
+	local move_dir = vmath.normalize(enemy_pos - player_pos)
+	local new_pos = enemy_pos + move_dir * self.speed * dt
+	go.set_position(new_pos)
+	self.is_moving = true
+elseif dist_to_player > self.attack_range then
+	-- приближаемся с плавным колебанием
+	local direction = vmath.normalize(direction_to_player)
+	local offset_x = math.sin(self.move_time * 3 + self.phase) * 2
+	local offset_y = math.cos(self.move_time * 3 + self.phase) * 2
+	local new_pos = enemy_pos + direction * self.speed * dt + vmath.vector3(offset_x * dt, offset_y * dt, 0)
+	go.set_position(new_pos)
+	self.is_moving = true
+else
+	if self.is_moving then
+		self.is_moving = false
+	end
+end
+
+-- Управление анимациями
+local scale = go.get_scale()
+if dist_to_player > 0 then
+	if direction_to_player.x < 0 then
+		scale.x = -math.abs(scale.x)
+	else
+		scale.x = math.abs(scale.x)
+	end
+	go.set(go.get_id(), "scale", scale)
+end
+
+if self.is_moving then
+	if self.current_animation ~= "run" then
+		spine.play_anim(self.url_spinemodel, "run", go.PLAYBACK_LOOP_FORWARD)
+		self.current_animation = "run"
+	end
+else
+	if self.current_animation ~= "idle" then
+		spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD)
+		self.current_animation = "idle"
+	end
+end
+
+-- Атака по таймеру, запуск шаров на игрока в радиусе атаки
+self.attack_cooldown = math.max(0, self.attack_cooldown - dt)
+if self.attack_cooldown <= 0 and dist_to_player <= self.attack_range then
+	local dir = vmath.normalize(player_pos - enemy_pos)
+	local spawn_pos = enemy_pos + dir * 20
+	local rot = vmath.quat_rotation_z(math.atan2(dir.y, dir.x))
+
+	local bullet_id = factory.create("#ballfactory", spawn_pos, rot)
+	msg.post(bullet_id, "set_direction", { direction = dir })
+
+	spine.play_anim(self.url_spinemodel, "attack", go.PLAYBACK_ONCE_FORWARD)
+	self.attack_cooldown = self.attack_interval
+end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("damage") then
+		print("Enemy took damage:", message.amount, "HP before:", self.current_hp)
+		self.current_hp = self.current_hp - message.amount
+		print("HP after:", self.current_hp)
+		if self.current_hp <= 0 then
+			print("Enemy died")
+			die(self)
+		end
+	end
+
+	if message_id == hash("request_player_id") then
+		msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+	end
+
+	if message_id == hash("player_id") then
+		self.player_id = message.player_id
+	end
+end

@@ -1,0 +1,16 @@
+local LIFETIME = 2
+function init(self)
+	self.spawner_url = msg.url("spawner#spawner")
+	self.life_timer = LIFETIME
+	self.is_active = true
+end
+
+function update(self, dt)
+	if not self.is_active then return end
+	self.life_timer = self.life_timer - dt
+	if self.life_timer <= 0 then
+		msg.post(self.spawner_url, hash("spawn_enemy_request"), { position = go.get_position(), enemy_id = 1 })
+		print("Spawner URL:", self.spawner_url)
+		go.delete()
+	end
+end

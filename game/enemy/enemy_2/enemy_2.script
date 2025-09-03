@@ -1,0 +1,113 @@
+local EnemyInfo = require "game.enemy.enemy_info"
+
+local ATTACK_RANGE = 30    -- радиус атаки врага
+local ATTACK_INTERVAL = 1.5 -- время между атаками в секундах
+
+local function die(self)
+	spine.play_anim(self.url_spinemodel, "dead", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function ()
+		go.delete()
+	end)
+end
+
+function init(self)
+	local max_offset = 30
+	self.target_offset = vmath.vector3(
+		(math.random() - 0.5) * 2 * max_offset,
+		(math.random() - 0.5) * 2 * max_offset,
+		0
+	)
+	self.move_time = 0
+	self.phase = math.random() * 2 * math.pi
+	self.url_spinemodel = "#spinemodel"
+	self.player_id = self.player_id
+	self.enemy_id = self.enemy_id or 1
+	self.wave_number = self.wave_number or 1
+	local data = EnemyInfo[self.enemy_id]
+	self.max_hp = math.floor(data.health * (data.hpMultiplierPerWave ^ self.wave_number))
+	self.current_hp = self.max_hp
+	local speed_variation = 0.2
+	local random_factor = 1 + (math.random() * 2 - 1) * speed_variation
+	self.speed = data.speed * (data.speedMultiplierPerWave ^ self.wave_number) * random_factor
+	self.melee_damage = data.meleeDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+	self.ranged_damage = data.rangedDamage * (data.damageMultiplierPerWave ^ self.wave_number)
+	self.gold_drop_amount = data.goldDropAmount
+	self.beer_drop_chance_percent = data.beerDropChancePercent
+	self.chest_drop_chance_percent = data.chestDropChancePercent
+	self.name = data.name
+	self.behavior = data.behavior
+	self.special_action = data.specialAction
+	spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD, { track = 1 })
+	self.is_moving = false
+	self.attack_cooldown = 0
+end
+
+function update(self, dt)
+	if not self.player_id then
+		print("No player_id")
+		return
+	end
+
+	self.move_time = self.move_time + dt
+	self.attack_cooldown = math.max(0, self.attack_cooldown - dt)
+
+	local player_pos = go.get_position(self.player_id)
+	local enemy_pos = go.get_position()
+
+	if not self.target_offset then
+		local max_offset = 30
+		self.target_offset = vmath.vector3(
+		(math.random() - 0.5) * 2 * max_offset,
+		(math.random() - 0.5) * 2 * max_offset,
+		0
+	)
+	end
+
+	local adjusted_target = player_pos + self.target_offset
+	local direction = adjusted_target - enemy_pos
+	local length = vmath.length(direction)
+
+	if length > 0 and self.speed and self.speed > 0 then
+		direction = vmath.normalize(direction)
+		local offset_x = math.sin(self.move_time * 5 + self.phase) * 3
+		local offset_y = math.cos(self.move_time * 5 + self.phase) * 3
+		local new_pos = enemy_pos + direction * self.speed * dt + vmath.vector3(offset_x * dt, offset_y * dt, 0)
+		go.set_position(new_pos)
+
+		local scale = go.get_scale()
+		if direction.x < 0 then
+			scale.x = -math.abs(scale.x)
+		else
+			scale.x = math.abs(scale.x)
+		end
+			go.set(go.get_id(), "scale", scale)
+		if not self.is_moving then
+			spine.play_anim(self.url_spinemodel, "run", go.PLAYBACK_LOOP_FORWARD)
+			self.is_moving = true
+		end
+	else
+		if self.is_moving then
+			spine.play_anim(self.url_spinemodel, "idle", go.PLAYBACK_LOOP_FORWARD)
+			self.is_moving = false
+		end
+	end
+
+	-- Нанесение урона игроку при близости и отсутствии кулдауна
+	if length <= ATTACK_RANGE and self.attack_cooldown == 0 then
+		msg.post(self.player_id, "damage", { amount = self.melee_damage })
+		self.attack_cooldown = ATTACK_INTERVAL
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("damage") then
+		self.current_hp = self.current_hp - message.amount
+		if self.current_hp <= 0 then
+			die(self)
+		end
+	end
+	if message_id == hash("request_player_id") then
+		msg.post(sender, "response_enemy_id", { enemy_url = go.get_id() })
+	elseif message_id == hash("player_id") then
+		self.player_id = message.player_id
+	end
+end

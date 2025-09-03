@@ -1,0 +1,32 @@
+local DAMAGE = 50          -- урон, наносимый миной
+local LIFETIME = 10        -- время жизни мины в секундах, после которого она удаляется
+
+function init(self)
+	self.life_timer = LIFETIME
+	self.is_active = true
+end
+
+function update(self, dt)
+	self.life_timer = self.life_timer - dt
+	if self.life_timer <= 0 then
+		go.delete()  -- удаляем мину по окончании времени жизни
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("contact_point_response") and self.is_active then
+		-- Получаем id объекта, с которым произошел контакт
+		local other_id = message.other_id
+		-- Проверяем, если это игрок или враг (можно добавить фильтр по тэгам / типам)
+
+		-- Отправляем сообщение нанесения урона
+		msg.post(other_id, "damage", { amount = DAMAGE })
+
+		-- Взрыв и уничтожение мины
+		self.is_active = false
+		-- Можно тут запустить анимацию взрыва
+		spine.play_anim("#spinemodel", "explode", go.PLAYBACK_ONCE_FORWARD, { track = 1 }, function()
+			go.delete()
+		end)
+	end
+end

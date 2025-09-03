@@ -1,4 +1,0 @@
-spine_scene: "/game/player/enemy/enemy.spinescene"
-default_animation: "idle"
-skin: ""
-material: "/defold-spine/assets/spine.material"
